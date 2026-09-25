@@ -11,9 +11,12 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
         }
+
         .container {
             background: white;
             padding: 40px 30px;
@@ -21,13 +24,23 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             text-align: center;
             max-width: 400px;
-            width: 80%;
+            width: 100%;
+            box-sizing: border-box;
         }
+
         h1 {
             color: #333;
             font-size: 24px;
-            margin-bottom: 24px;
+            margin: 0 0 24px;
         }
+
+        /* 工具链接列表 */
+        .tool-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px; /* 两个链接之间的间距，可改成 20px */
+        }
+
         .tool-link {
             display: block;
             background-color: #07c160; /* 微信绿 */
@@ -37,19 +50,24 @@
             border-radius: 8px;
             font-size: 18px;
             font-weight: 500;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, transform 0.2s;
+            box-sizing: border-box;
         }
+
         .tool-link:hover {
             background-color: #06ad56;
+            transform: translateY(-1px);
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>📚 我的网页工具</h1>
-        <!-- 点击下面的按钮跳转到你的 html 文件 -->
-        <div><a href="语文听写小工具.html" class="tool-link">打开语文听写小工具</a></div>        
-        <div><a href="旅行足迹.html" class="tool-link">打开我去过的地方</a></div>
+
+        <div class="tool-list">
+            <a href="语文听写小工具.html" class="tool-link">打开语文听写小工具</a>
+            <a href="旅行足迹.html" class="tool-link">打开我去过的地方</a>
+        </div>
     </div>
 </body>
 </html>
