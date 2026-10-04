@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英语生词听写小工具</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f0f4f8;
+            color: #2d3748;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            padding: 32px;
+        }
+        h1 {
+            font-size: 1.6rem;
+            text-align: center;
+            margin-bottom: 4px;
+            color: #1a202c;
+        }
+        .subtitle {
+            text-align: center;
+            color: #718096;
+            font-size: 0.9rem;
+            margin-bottom: 28px;
+        }
+        .section {
+            margin-bottom: 24px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .section h2 {
+            font-size: 1.05rem;
+            margin-bottom: 12px;
+            color: #2b6cb0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        textarea {
+            width: 100%;
+            height: 80px;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            resize: vertical;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        textarea:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,0.15); }
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        button {
+            padding: 9px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+        button:active:not(:disabled) { transform: scale(0.97); }
+        button:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn-primary { background: #3182ce; color: #fff; }
+        .btn-primary:hover:not(:disabled) { background: #2b6cb0; }
+        .btn-secondary { background: #e2e8f0; color: #4a5568; }
+        .btn-secondary:hover:not(:disabled) { background: #cbd5e0; }
+        .btn-danger { background: #fc8181; color: #fff; }
+        .btn-danger:hover:not(:disabled) { background: #f56565; }
+        .btn-speak { background: #48bb78; color: #fff; }
+        .btn-speak:hover:not(:disabled) { background: #38a169; }
+        .btn-hint { background: #ed8936; color: #fff; }
+        .btn-hint:hover:not(:disabled) { background: #dd6b20; }
+        .btn-mini { padding: 4px 10px; font-size: 0.8rem; flex-shrink: 0; }
+
+        /* ===== 分类选择行 ===== */
+        .category-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .category-row .cat-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        .category-select {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e0;
+            font-size: 0.85rem;
+            font-family: inherit;
+            background: #fff;
+            outline: none;
+            max-width: 200px;
+        }
+        .category-select:focus { border-color: #4299e1; }
+
+        .stats {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .stat-item {
+            flex: 1;
+            min-width: 90px;
+            background: #ebf8ff;
+            border-radius: 8px;
+            padding: 12px 8px;
+            text-align: center;
+        }
+        .stat-item .num {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #2b6cb0;
+        }
+        .stat-item .label {
+            font-size: 0.78rem;
+            color: #718096;
+            margin-top: 2px;
+        }
+        .word-display {
+            text-align: center;
+            padding: 28px 16px;
+            background: #fff;
+            border: 2px dashed #bee3f8;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        .word-display .prompt {
+            font-size: 0.85rem;
+            color: #a0aec0;
+            margin-bottom: 8px;
+        }
+        .word-display .big-word {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2b6cb0;
+            letter-spacing: 1px;
+            min-height: 2.4rem;
+        }
+        /* ===== 中文含义提示（默认隐藏，点击「提示」后才显示） ===== */
+        .word-display .meaning-hint {
+            margin-top: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #dd6b20;
+            min-height: 1.4rem;
+            word-break: break-all;
+            transition: opacity 0.2s ease;
+        }
+        .word-display .meaning-hint.hint-hidden {
+            visibility: hidden;
+            opacity: 0;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            text-align: center;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+            letter-spacing: 0.5px;
+        }
+        input[type="text"]:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,0.15); }
+        .feedback {
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 600;
+            min-height: 1.5rem;
+            margin: 12px 0;
+        }
+        .feedback.correct { color: #38a169; }
+        .feedback.wrong { color: #e53e3e; }
+
+        /* ===== 进度条区域 ===== */
+        .progress-wrap { margin-bottom: 16px; }
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.78rem;
+            color: #718096;
+            margin-bottom: 6px;
+        }
+        .progress-label .pl-item { display: flex; align-items: center; gap: 4px; }
+        .progress-label b { color: #2b6cb0; font-size: 0.85rem; }
+        .progress-label .pl-right { text-align: right; }
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4299e1, #48bb78);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .error-list {
+            list-style: none;
+            max-height: 340px;
+            overflow-y: auto;
+        }
+        .error-list li {
+            padding: 8px 12px;
+            background: #fff5f5;
+            border-left: 3px solid #fc8181;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+        .error-list .err-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+        .error-list .err-word {
+            color: #e53e3e;
+            font-weight: 600;
+            word-break: break-all;
+        }
+        .error-list .err-meta {
+            color: #718096;
+            font-size: 0.76rem;
+            word-break: break-all;
+        }
+        .hidden { display: none !important; }
+        .empty-tip { color: #a0aec0; font-size: 0.9rem; text-align: center; padding: 12px; }
+        .voice-select {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e0;
+            font-size: 0.85rem;
+            font-family: inherit;
+            background: #fff;
+            margin-left: auto;
+            max-width: 55%;
+        }
+        .tip-text { font-size: 0.85rem; color: #718096; margin-bottom: 8px; line-height: 1.6; }
+        .tip-text code {
+            background: #edf2f7;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #2b6cb0;
+        }
+        @media (max-width: 500px) {
+            .container { padding: 20px 16px; }
+            .word-display .big-word { font-size: 1.4rem; }
+            .stat-item .num { font-size: 1.15rem; }
+            .progress-label { font-size: 0.72rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📖 英语生词听写</h1>
+    <p class="subtitle">每轮 5 个单词 · 语音朗读 · 拼写检查 · 错词回顾</p>
+
+    <!-- 导入区域 -->
+    <div class="section" id="importSection">
+        <h2>📥 导入生词</h2>
+        <p class="tip-text">
+            多个单词请用 <b>逗号</b>、<b>顿号</b> 或 <b>换行</b> 分隔；<br>
+            可在单词后用 <b>空格</b> 或 <b>=</b> 接中文含义，例如：<br>
+            <code>apple=苹果, banana 香蕉, orange=橙子</code>
+        </p>
+
+        <!-- 分类选择 -->
+        <div class="category-row">
+            <span class="cat-label">📁 分类：</span>
+            <select id="categorySelect" class="category-select" onchange="onCategoryChange()"></select>
+            <button class="btn-secondary btn-mini" onclick="addNewCategory()">＋ 新建分类</button>
+        </div>
+
+        <textarea id="wordInput" placeholder="apple=苹果, banana=香蕉, orange=橙子"></textarea>
+        <div class="btn-row">
+            <button class="btn-primary" onclick="importWords()">导入单词</button>
+            <button class="btn-danger" onclick="clearAllWords()">清空词库</button>
+        </div>
+    </div>
+
+    <!-- 数据概览 -->
+    <div class="stats" id="statsArea">
+        <div class="stat-item">
+            <div class="num" id="totalWords">0</div>
+            <div class="label">词库总数</div>
+        </div>
+        <div class="stat-item">
+            <div class="num" id="masteredWords">0</div>
+            <div class="label">已掌握</div>
+        </div>
+        <div class="stat-item">
+            <div class="num" id="wrongWords">0</div>
+            <div class="label">错词数</div>
+        </div>
+        <div class="stat-item">
+            <div class="num" id="sessionProgress">0/5</div>
+            <div class="label">本轮进度</div>
+        </div>
+    </div>
+
+    <!-- 听写区域 -->
+    <div class="section" id="dictationSection">
+        <h2 style="display:flex;align-items:center;">
+            ✏️ 开始听写
+            <select class="voice-select" id="voiceSelect" onchange="saveVoicePreference()"></select>
+        </h2>
+
+        <!-- 进度条：显示本轮进度 + 总进度，进度条本身表示总进度 -->
+        <div class="progress-wrap">
+            <div class="progress-label">
+                <span class="pl-item">本轮进度：<b id="roundText">0 / 5</b></span>
+                <span class="pl-item pl-right">总进度：<b id="progressText">0 / 0</b></span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <div class="word-display">
+            <div class="prompt">请根据发音拼写单词（需要中文提示可点击下方「提示」）</div>
+            <div class="big-word" id="currentWordDisplay">—</div>
+            <!-- 中文含义提示：默认隐藏 -->
+            <div class="meaning-hint hint-hidden" id="meaningHint">—</div>
+        </div>
+
+        <input type="text" id="answerInput" placeholder="在此输入英文单词..." autocomplete="off" autocapitalize="off" spellcheck="false">
+
+        <div class="feedback" id="feedback"></div>
+
+        <div class="btn-row">
+            <button class="btn-speak" onclick="speakCurrentWord()">🔊 朗读</button>
+            <button class="btn-hint" id="hintBtn" onclick="showMeaningHint()">💡 提示</button>
+            <button class="btn-primary" onclick="submitAnswer()">提交答案</button>
+            <button class="btn-secondary" onclick="startDictation()">开始/重置听写</button>
+        </div>
+    </div>
+
+    <!-- 错词列表 -->
+    <div class="section" id="errorSection">
+        <h2>❌ 错词回顾</h2>
+        <ul class="error-list" id="errorList">
+            <li class="empty-tip">暂无错词，继续加油！</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    // ==================== 常量与状态 ====================
+    const STORAGE_KEY = 'english_dictation_words';
+    const VOICE_KEY = 'english_dictation_voice';
+    const CATEGORY_KEY = 'english_dictation_categories';
+    const CURRENT_CATEGORY_KEY = 'english_dictation_current_category';
+    const DEFAULT_CATEGORY = '默认分类';
+    const MASTER_THRESHOLD = 3;   // 净正确次数达到该值即视为「已掌握」
+    const ROUND_SIZE = 5;         // 每轮听写的单词数量
+
+    /**
+     * 词库数据结构：
+     * allWords = [
+     *   { word: 'apple', meaning: '苹果', category: '水果', dictCount: 5, errorCount: 2 },
+     *   ...
+     * ]
+     * meaning    —— 中文含义（提示用，可为空字符串）
+     * category   —— 所属分类
+     * dictCount  —— 听写总次数
+     * errorCount —— 错误次数
+     * 净正确次数 = dictCount - errorCount
+     */
+    let allWords = [];
+    let categories = [];                      // 全部分类名
+    let currentCategory = DEFAULT_CATEGORY;   // 导入时使用的分类
+
+    let currentWordObj = null;    // 当前听写的单词对象
+    let roundWords = [];          // 本轮抽中的 5 个单词对象
+    let sessionDone = [];         // 本轮已听写的单词（字符串数组），同时作为 nextWord 的游标
+    let isSessionActive = false;
+    let isSubmitting = false;     // 防止连点 / 连按回车
+    let hintShown = false;        // 当前单词是否已查看中文提示
+
+    // ==================== 工具函数 ====================
+    function netScore(w) { return w.dictCount - w.errorCount; }
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+    }
+
+    function normalizeWordItem(item) {
+        if (typeof item === 'string') {
+            const w = item.trim().toLowerCase();
+            return w ? { word: w, meaning: '', category: DEFAULT_CATEGORY, dictCount: 0, errorCount: 0 } : null;
+        }
+        if (item && typeof item === 'object' && typeof item.word === 'string') {
+            const w = item.word.trim().toLowerCase();
+            if (!w) return null;
+            return {
+                word: w,
+                meaning: typeof item.meaning === 'string' ? item.meaning.trim() : '',
+                category: (typeof item.category === 'string' && item.category.trim())
+                    ? item.category.trim() : DEFAULT_CATEGORY,
+                dictCount: Math.max(0, parseInt(item.dictCount, 10) || 0),
+                errorCount: Math.max(0, parseInt(item.errorCount, 10) || 0)
+            };
+        }
+        return null;
+    }
+
+    /**
+     * 解析单条导入内容，支持以下写法：
+     *   apple                  → 单词：apple，含义：空
+     *   apple=苹果 / apple：苹果 → 单词：apple，含义：苹果
+     *   apple 苹果              → 单词：apple，含义：苹果
+     */
+    function parseWordEntry(entry) {
+        let text = String(entry).trim();
+        if (!text) return null;
+
+        let word = '', meaning = '';
+        const eq = text.match(/^(.+?)\s*[=＝:：]\s*(.*)$/);
+
+        if (eq) {
+            word = eq[1];
+            meaning = eq[2];
+        } else {
+            // 没有显式分隔符时，以第一个中文字符作为分界
+            const idx = text.search(/[\u4e00-\u9fa5]/);
+            if (idx === 0) return null;          // 整条都是中文，不是有效单词
+            if (idx > 0) {
+                word = text.slice(0, idx);
+                meaning = text.slice(idx);
+            } else {
+                word = text;
+            }
+        }
+
+        word = word.replace(/[^A-Za-z'\- ]/g, '').trim().toLowerCase();
+        meaning = meaning.replace(/\s+/g, ' ').trim()
+                         .replace(/^[-–—:：,，、;；]+|[-–—:：,，、;；]+$/g, '');
+
+        if (!word) return null;
+        return { word: word, meaning: meaning };
+    }
+
+    // ==================== 数据持久化 ====================
+    function loadWords() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            const data = raw ? JSON.parse(raw) : [];
+            // 兼容旧版（纯字符串数组）数据结构，自动迁移
+            allWords = Array.isArray(data)
+                ? data.map(normalizeWordItem).filter(Boolean)
+                : [];
+        } catch (e) {
+            allWords = [];
+        }
+        updateStats();
+    }
+
+    function saveWords() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(allWords));
+        } catch (e) {
+            console.warn('保存失败', e);
+        }
+        updateStats();
+    }
+
+    // ==================== 分类管理 ====================
+    function loadCategories() {
+        try {
+            const raw = localStorage.getItem(CATEGORY_KEY);
+            const data = raw ? JSON.parse(raw) : [];
+            categories = Array.isArray(data)
+                ? data.filter(c => typeof c === 'string' && c.trim()).map(c => c.trim())
+                : [];
+        } catch (e) {
+            categories = [];
+        }
+
+        // 把词库中已存在的分类合并进来
+        allWords.forEach(w => {
+            if (w.category && !categories.includes(w.category)) categories.push(w.category);
+        });
+        if (!categories.includes(DEFAULT_CATEGORY)) categories.unshift(DEFAULT_CATEGORY);
+
+        const saved = localStorage.getItem(CURRENT_CATEGORY_KEY);
+        currentCategory = (saved && categories.includes(saved)) ? saved : DEFAULT_CATEGORY;
+
+        renderCategorySelect();
+    }
+
+    function saveCategories() {
+        try {
+            localStorage.setItem(CATEGORY_KEY, JSON.stringify(categories));
+        } catch (e) { /* 忽略 */ }
+        try {
+            localStorage.setItem(CURRENT_CATEGORY_KEY, currentCategory);
+        } catch (e) { /* 忽略 */ }
+    }
+
+    function renderCategorySelect() {
+        const sel = document.getElementById('categorySelect');
+        if (!sel) return;
+        sel.innerHTML = categories
+            .map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`)
+            .join('');
+        sel.value = currentCategory;
+    }
+
+    function onCategoryChange() {
+        const sel = document.getElementById('categorySelect');
+        currentCategory = sel.value || DEFAULT_CATEGORY;
+        saveCategories();
+    }
+
+    function addNewCategory() {
+        const name = prompt('请输入新分类名称：', '');
+        if (name === null) return;                 // 用户取消
+        const n = name.trim();
+        if (!n) { alert('分类名称不能为空'); return; }
+
+        if (!categories.includes(n)) categories.push(n);
+        currentCategory = n;
+        saveCategories();
+        renderCategorySelect();
+    }
+
+    // ==================== 界面统计 ====================
+    function updateStats() {
+        const total = allWords.length;
+        const mastered = allWords.filter(w => netScore(w) >= MASTER_THRESHOLD).length;
+        const wrongNum = allWords.filter(w => w.errorCount > 0).length;
+
+        // 本轮总词数：本轮已开始用实际抽取数，未开始时按每轮 5 个（词库不足则取词库数）
+        const roundTotal = roundWords.length || Math.min(ROUND_SIZE, total);
+
+        document.getElementById('totalWords').textContent = total;
+        document.getElementById('masteredWords').textContent = mastered;
+        document.getElementById('wrongWords').textContent = wrongNum;
+        document.getElementById('sessionProgress').textContent =
+            `${sessionDone.length}/${roundTotal}`;
+
+        // —— 进度条上方的两项数据 ——
+        document.getElementById('roundText').textContent =
+            `${sessionDone.length} / ${roundTotal}`;            // 本轮进度
+        document.getElementById('progressText').textContent =
+            `${mastered} / ${total}`;                            // 总进度（已掌握 / 词库总数）
+
+        // —— 进度条本身显示「总进度」——
+        const pct = total > 0 ? (mastered / total) * 100 : 0;
+        document.getElementById('progressFill').style.width = pct + '%';
+
+        renderErrorList();
+    }
+
+    // ==================== 导入功能 ====================
+    function importWords() {
+        const raw = document.getElementById('wordInput').value.trim();
+        if (!raw) { alert('请先输入单词'); return; }
+
+        // 支持逗号、顿号、分号、换行分隔
+        const entries = raw.split(/[,，、;；\n\r]+/).map(s => s.trim()).filter(Boolean);
+        if (entries.length === 0) { alert('未识别到有效单词'); return; }
+
+        const category = currentCategory || DEFAULT_CATEGORY;
+        const existMap = new Map(allWords.map(w => [w.word, w]));
+
+        let added = 0, filled = 0, skipped = 0;
+
+        entries.forEach(entry => {
+            const parsed = parseWordEntry(entry);
+            if (!parsed) { skipped++; return; }
+
+            const existing = existMap.get(parsed.word);
+            if (existing) {
+                // 已存在的单词：只在原含义为空时补充中文含义，不改动统计与分类
+                if (!existing.meaning && parsed.meaning) {
+                    existing.meaning = parsed.meaning;
+                    filled++;
+                } else {
+                    skipped++;
+                }
+                return;
+            }
+
+            const obj = {
+                word: parsed.word,
+                meaning: parsed.meaning,
+                category: category,
+                dictCount: 0,
+                errorCount: 0
+            };
+            allWords.push(obj);
+            existMap.set(parsed.word, obj);
+            added++;
+        });
+
+        saveWords();
+
+        let msg = `成功导入 ${added} 个新单词到「${category}」`;
+        if (filled) msg += `，为 ${filled} 个已有单词补充了中文含义`;
+        if (skipped) msg += `，跳过 ${skipped} 个重复/无效项`;
+        alert(msg);
+
+        document.getElementById('wordInput').value = '';
+
+        if (allWords.length > 0 && !isSessionActive) {
+            startDictation();
+        }
+    }
+
+    function clearAllWords() {
+        if (!confirm('确定要清空整个词库吗？此操作不可恢复。')) return;
+        allWords = [];
+        roundWords = [];
+        sessionDone = [];
+        currentWordObj = null;
+        isSessionActive = false;
+        isSubmitting = false;
+        saveWords();
+        document.getElementById('currentWordDisplay').textContent = '—';
+        resetHint();
+        document.getElementById('answerInput').value = '';
+        setFeedback('', '');
+    }
+
+    // ==================== 语音合成 ====================
+    const speechSynth = window.speechSynthesis;
+    let voices = [];
+    let preferredVoice = localStorage.getItem(VOICE_KEY) || '';
+
+    function loadVoices() {
+        if (!speechSynth) return;
+        voices = speechSynth.getVoices();
+        const select = document.getElementById('voiceSelect');
+        if (!select) return;
+        select.innerHTML = '';
+
+        const enVoices = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+        const otherVoices = voices.filter(v => !(v.lang && v.lang.toLowerCase().startsWith('en')));
+
+        const addOpt = (v, label) => {
+            const opt = document.createElement('option');
+            opt.value = v.name;
+            opt.textContent = `${label} (${v.lang})`;
+            select.appendChild(opt);
+        };
+
+        enVoices.forEach(v => addOpt(v, v.name));
+        if (otherVoices.length > 0) {
+            const sep = document.createElement('option');
+            sep.disabled = true;
+            sep.textContent = '── 其他语音 ──';
+            select.appendChild(sep);
+            otherVoices.forEach(v => addOpt(v, v.name));
+        }
+
+        if (preferredVoice && voices.some(v => v.name === preferredVoice)) {
+            select.value = preferredVoice;
+        } else if (enVoices.length > 0) {
+            select.value = enVoices[0].name;
+        }
+    }
+
+    function saveVoicePreference() {
+        preferredVoice = document.getElementById('voiceSelect').value;
+        localStorage.setItem(VOICE_KEY, preferredVoice);
+    }
+
+    function getSelectedVoice() {
+        const name = document.getElementById('voiceSelect').value;
+        return voices.find(v => v.name === name)
+            || voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en'))
+            || null;
+    }
+
+    function speakText(text) {
+        if (!text) return;
+        if (!speechSynth) {
+            alert('当前浏览器不支持语音合成，请使用 Chrome 或 Edge。');
+            return;
+        }
+        speechSynth.cancel(); // 停止上一次朗读
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.85;   // 稍慢，方便听清
+        utterance.pitch = 1.0;
+        const voice = getSelectedVoice();
+        if (voice) utterance.voice = voice;
+        speechSynth.speak(utterance);
+    }
+
+    function speakCurrentWord() {
+        if (currentWordObj) speakText(currentWordObj.word);
+    }
+
+    if (speechSynth && speechSynth.onvoiceschanged !== undefined) {
+        speechSynth.onvoiceschanged = loadVoices;
+    }
+    loadVoices();
+    setTimeout(loadVoices, 500);   // 部分浏览器需要延迟加载
+
+    // ==================== 中文含义提示 ====================
+    /**
+     * 重置提示状态：默认不显示中文含义，让用户先靠读音拼写。
+     */
+    function resetHint() {
+        hintShown = false;
+        const el = document.getElementById('meaningHint');
+        if (el) {
+            el.textContent = '—';
+            el.classList.add('hint-hidden');   // 保留占位，避免界面跳动
+        }
+        updateHintBtn();
+    }
+
+    /**
+     * 用户主动点击「提示」按钮后，才展示当前单词的中文含义。
+     */
+    function showMeaningHint() {
+        if (!isSessionActive || !currentWordObj) return;
+        const el = document.getElementById('meaningHint');
+        el.textContent = currentWordObj.meaning ? currentWordObj.meaning : '（暂无中文提示）';
+        el.classList.remove('hint-hidden');
+        hintShown = true;
+        updateHintBtn();
+    }
+
+    function updateHintBtn() {
+        const btn = document.getElementById('hintBtn');
+        if (!btn) return;
+        const usable = isSessionActive && !!currentWordObj;
+        btn.disabled = !usable;
+        btn.textContent = (usable && hintShown) ? '💡 已显示提示' : '💡 提示';
+    }
+
+    // ==================== 听写逻辑 ====================
+    function setFeedback(text, type) {
+        const el = document.getElementById('feedback');
+        el.textContent = text;
+        el.className = 'feedback' + (type ? ' ' + type : '');
+    }
+
+    /**
+     * 抽取本轮要听写的单词：
+     * 1) 先把整个词库随机打乱；
+     * 2) 再按「净正确次数」升序稳定排序（同分保持随机顺序）；
+     * 3) 取前 ROUND_SIZE 个作为本轮题目。
+     */
+    function pickRoundWords() {
+        const shuffled = allWords.slice();
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        shuffled.sort((a, b) => netScore(a) - netScore(b));
+        return shuffled.slice(0, Math.min(ROUND_SIZE, shuffled.length));
+    }
+
+    function startDictation() {
+        if (allWords.length === 0) {
+            alert('词库为空，请先导入单词。');
+            return;
+        }
+        roundWords = pickRoundWords();   // 本轮 5 个单词
+        sessionDone = [];
+        isSessionActive = true;
+        isSubmitting = false;
+        currentWordObj = null;
+        setFeedback('', '');
+        document.getElementById('answerInput').value = '';
+        resetHint();
+        updateStats();
+        nextWord();
+        document.getElementById('answerInput').focus();
+    }
+
+    /**
+     * 进入本轮的下一个单词。
+     * sessionDone 同时充当游标：已听写个数就是下一个单词的下标。
+     */
+    function nextWord() {
+        if (!isSessionActive) return;
+
+        if (sessionDone.length >= roundWords.length) {
+            finishSession();
+            return;
+        }
+
+        currentWordObj = roundWords[sessionDone.length];
+
+        document.getElementById('currentWordDisplay').textContent = '？';
+        resetHint();   // ★ 每个新单词都重新隐藏中文提示
+        document.getElementById('answerInput').value = '';
+        setFeedback('', '');
+        updateStats();
+
+        // 延迟一点再朗读，让界面先渲染
+        setTimeout(() => {
+            if (isSessionActive && currentWordObj) speakText(currentWordObj.word);
+        }, 300);
+
+        document.getElementById('answerInput').focus();
+    }
+
+    function finishSession() {
+        isSessionActive = false;
+        currentWordObj = null;
+        document.getElementById('currentWordDisplay').textContent = '🎉 完成！';
+        resetHint();
+        setFeedback(`本轮听写结束，共练习 ${sessionDone.length} 个单词。点击「开始/重置听写」开始下一轮。`, 'correct');
+        updateStats();
+    }
+
+    function submitAnswer() {
+        if (!isSessionActive || !currentWordObj) {
+            alert('请先点击「开始/重置听写」。');
+            return;
+        }
+        if (isSubmitting) return;
+
+        const input = document.getElementById('answerInput');
+        const userAnswer = input.value.trim().toLowerCase();
+        if (!userAnswer) {
+            alert('请输入答案');
+            input.focus();
+            return;
+        }
+
+        isSubmitting = true;
+
+        const correctAnswer = currentWordObj.word;
+        const isRight = userAnswer === correctAnswer;
+
+        // —— 更新统计数据 ——
+        currentWordObj.dictCount += 1;
+        if (!isRight) currentWordObj.errorCount += 1;
+
+        sessionDone.push(correctAnswer);   // 游标前进
+        saveWords();                       // 内部会调用 updateStats() 刷新界面
+
+        if (isRight) {
+            setFeedback('✅ 正确！', 'correct');
+            setTimeout(() => {
+                isSubmitting = false;
+                nextWord();
+            }, 600);
+        } else {
+            setFeedback(`❌ 错误，正确答案是：${correctAnswer}`, 'wrong');
+            setTimeout(() => {
+                isSubmitting = false;
+                nextWord();
+            }, 1500);
+        }
+    }
+
+    // 回车提交
+    document.getElementById('answerInput').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            submitAnswer();
+        }
+    });
+
+    // ==================== 错词列表渲染 ====================
+    function renderErrorList() {
+        const list = document.getElementById('errorList');
+
+        const wrongList = allWords
+            .filter(w => w.errorCount > 0)
+            .sort((a, b) => {
+                if (b.errorCount !== a.errorCount) return b.errorCount - a.errorCount;
+                return netScore(a) - netScore(b);
+            });
+
+        if (wrongList.length === 0) {
+            list.innerHTML = '<li class="empty-tip">暂无错词，继续加油！</li>';
+            return;
+        }
+
+        list.innerHTML = wrongList.map(w => {
+            const metaParts = [];
+            if (w.category) metaParts.push(`[${w.category}]`);
+            if (w.meaning) metaParts.push(w.meaning);
+            metaParts.push(`听写 ${w.dictCount} 次`);
+            metaParts.push(`错误 ${w.errorCount} 次`);
+            metaParts.push(`净正确 ${netScore(w)}`);
+
+            return `
+            <li>
+                <div class="err-info">
+                    <span class="err-word">${escapeHtml(w.word)}</span>
+                    <span class="err-meta">${escapeHtml(metaParts.join(' · '))}</span>
+                </div>
+                <button class="btn-secondary btn-mini" data-word="${escapeHtml(w.word)}">🔊</button>
+            </li>`;
+        }).join('');
+
+        list.querySelectorAll('button[data-word]').forEach(btn => {
+            btn.addEventListener('click', () => speakText(btn.dataset.word));
+        });
+    }
+
+    // ==================== 初始化 ====================
+    loadWords();            // 先读词库
+    loadCategories();       // 再根据词库合并分类并渲染下拉框
+    resetHint();            // 中文提示默认隐藏
+    if (allWords.length > 0) {
+        startDictation();
+    }
+</script>
+</body>
+</html>
