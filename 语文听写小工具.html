@@ -37,6 +37,27 @@
   .hint { color: #7a8699; font-size: 13px; margin: 0 0 12px; line-height: 1.7; }
   code { background: #eef2fb; padding: 1px 6px; border-radius: 6px; color: #3b6ef6; font-size: 12px; }
 
+  /* ---------- 表单控件 ---------- */
+  .field { margin-bottom: 12px; }
+  .field-label {
+    display: block; font-size: 14px; font-weight: 600; color: #4a5a75; margin-bottom: 6px;
+  }
+  .field-label .req { color: #e03131; margin-left: 2px; }
+  .input {
+    width: 100%; max-width: 340px; border: 1px solid #e3e8f0; border-radius: 10px;
+    padding: 10px 12px; font-size: 14px; font-family: inherit; background: #fafbfe;
+    color: inherit; outline: none; transition: .2s;
+  }
+  .input:focus { border-color: #3b6ef6; background: #fff; box-shadow: 0 0 0 3px rgba(59,110,246,.12); }
+
+  select.select {
+    border: 1px solid #e3e8f0; border-radius: 10px; padding: 10px 12px;
+    font-size: 14px; font-family: inherit; background: #fafbfe; color: inherit;
+    outline: none; cursor: pointer; transition: .2s; min-width: 140px;
+  }
+  select.select:focus { border-color: #3b6ef6; background: #fff; box-shadow: 0 0 0 3px rgba(59,110,246,.12); }
+  select.select.select-sm { padding: 6px 10px; font-size: 13px; min-width: 130px; border-radius: 8px; }
+
   textarea {
     width: 100%; border: 1px solid #e3e8f0; border-radius: 12px; padding: 12px;
     font-size: 14px; font-family: inherit; line-height: 1.8; resize: vertical;
@@ -44,7 +65,7 @@
   }
   textarea:focus { border-color: #3b6ef6; background: #fff; box-shadow: 0 0 0 3px rgba(59,110,246,.12); }
 
-  .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
   .btn {
     border: none; border-radius: 10px; padding: 10px 18px; font-size: 14px;
     font-weight: 600; cursor: pointer; transition: .18s; font-family: inherit;
@@ -65,6 +86,13 @@
   .btn.import { background: #15aabf; color: #fff; }
   .btn.import:hover:not(:disabled) { background: #1098ad; }
 
+  .switch-check {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; color: #4a5a75; cursor: pointer; user-select: none;
+    background: #f4f7fd; padding: 9px 13px; border-radius: 10px; font-weight: 600;
+  }
+  .switch-check input { width: 15px; height: 15px; accent-color: #3b6ef6; cursor: pointer; }
+
   .status {
     margin: 14px 0 0; font-size: 14px; color: #4a5a75;
     background: #f4f7fd; border-radius: 10px; padding: 10px 14px; line-height: 1.6;
@@ -74,23 +102,92 @@
     text-align: center; padding: 20px 10px 20px 24px;
     background: #f4f7fd; border-radius: 12px; text-indent: 14px;
   }
+  .pinyin-hint {
+    font-size: 30px; letter-spacing: 6px; font-weight: 700; color: #0ca678;
+    text-align: center; padding: 18px 10px; text-indent: 6px;
+    background: #effaf5; border-radius: 12px; word-break: break-word;
+  }
   .word-list { display: flex; flex-wrap: wrap; gap: 10px; }
   .word {
+    display: inline-flex; flex-direction: column; align-items: center; gap: 1px;
     background: #eef2fb; color: #243043; border-radius: 10px;
     padding: 8px 14px; font-size: 17px; font-weight: 600; letter-spacing: 1px;
+    border: 2px solid transparent; transition: .15s;
+  }
+  .word-text { line-height: 1.3; }
+  .word-pinyin {
+    font-size: 12px; font-weight: 500; letter-spacing: .5px;
+    color: #7a8699; line-height: 1.2;
   }
   .poem-full {
     white-space: pre-line; line-height: 2; font-size: 16px;
     background: #f8fafd; border-radius: 12px; padding: 16px;
   }
   .empty { color: #a3adbe; font-size: 14px; }
+
+  /* 可勾选的生词 */
+  .word-check { display: inline-flex; align-items: center; cursor: pointer; user-select: none; }
+  .word-check input { position: absolute; opacity: 0; pointer-events: none; }
+  .word-check input:checked + .word {
+    background: #ffe3e3; color: #e03131; border-color: #ffa8a8;
+  }
+  .word-check input:checked + .word .word-pinyin { color: #e03131; opacity: .72; }
+  .word-check input:checked + .word .word-text::after {
+    content: ' ✕'; font-size: 13px; font-weight: 700;
+  }
+
+  /* ---------- 掌握进度条 ---------- */
+  .progress-wrap {
+    background: #f7f9fd; border-radius: 12px; padding: 14px 16px; margin: 4px 0 16px;
+  }
+  .progress-top {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-bottom: 10px; flex-wrap: wrap;
+  }
+  .progress-title { font-size: 14px; font-weight: 700; color: #4a5a75; }
+  .progress-right { display: flex; align-items: center; gap: 10px; }
+  .progress-value {
+    font-size: 13px; color: #4a5a75; font-weight: 700;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .progress-bar { height: 12px; background: #e6ebf5; border-radius: 999px; overflow: hidden; }
+  .progress-fill {
+    height: 100%; width: 0; border-radius: 999px;
+    background: linear-gradient(90deg, #3b6ef6, #12b886);
+    transition: width .4s ease;
+  }
+  .progress-tip { margin: 8px 0 0; font-size: 12px; color: #a3adbe; line-height: 1.6; }
+
+  /* 数据概览表格 */
+  .table-wrap {
+    max-height: 340px; overflow: auto; margin-top: 6px;
+    border: 1px solid #eef2fb; border-radius: 12px;
+  }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .data-table th, .data-table td {
+    padding: 10px 12px; text-align: left; border-bottom: 1px solid #f0f3f9;
+  }
+  .data-table thead th {
+    position: sticky; top: 0; z-index: 1;
+    background: #f7f9fd; color: #7a8699; font-weight: 600; font-size: 13px;
+  }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+  .data-table tbody tr:hover td { background: #fafcff; }
+  .data-table .num-col { width: 86px; text-align: center; font-variant-numeric: tabular-nums; }
+  .data-table td.cell-content { word-break: break-all; line-height: 1.6; }
+  .cell-pinyin { display: block; font-size: 12px; color: #a3adbe; margin-top: 2px; letter-spacing: .5px; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .tag-vocab { background: #e8f0ff; color: #3b6ef6; }
+  .tag-poem  { background: #f0e8ff; color: #7048e8; }
+  .tag-cat   { background: #eef2fb; color: #5c6b85; }
+  .wrong-num { color: #e03131; font-weight: 700; }
 </style>
 </head>
 <body>
 <div class="app">
   <header>
     <h1>📖 语文听写助手</h1>
-    <p class="sub">生词 · 古诗词 导入与听写（数据保存在本机浏览器）</p>
+    <p class="sub">生词 · 古诗词 分类导入与听写（数据保存在本机浏览器）</p>
   </header>
 
   <nav class="tabs">
@@ -102,8 +199,17 @@
   <section id="panel-import" class="panel active">
     <div class="card">
       <h2>生词导入</h2>
-      <p class="hint">多个生词请用<strong>逗号</strong>分隔（中英文逗号、顿号、换行均可），例如：<code>踌躇，蹒跚，憧憬，斑斓</code></p>
-      <textarea id="vocabInput" rows="4" placeholder="踌躇，蹒跚，憧憬，斑斓"></textarea>
+      <div class="field">
+        <label class="field-label" for="vocabCategory">分类<span class="req">*</span>（下拉选择或手工输入）</label>
+        <input id="vocabCategory" class="input" list="categoryOptions"
+               placeholder="例如：第一单元 / 期末复习 / 易错字" autocomplete="off">
+      </div>
+      <p class="hint">
+        多个生词请用<strong>逗号</strong>分隔（中英文逗号、顿号、分号、换行均可）。<br>
+        可选填写<strong>拼音</strong>作为听写提示，支持以下写法：<br>
+        <code>踌躇 chóu chú</code>　<code>踌躇（chóu chú）</code>　<code>踌躇|chóu chú</code>　<code>踌躇：chóu chú</code>
+      </p>
+      <textarea id="vocabInput" rows="4" placeholder="踌躇 chóu chú，蹒跚 pán shān，憧憬 chōng jǐng，斑斓 bān lán"></textarea>
       <div class="row">
         <button id="importVocabBtn" class="btn primary">导入生词</button>
         <button id="clearVocabBtn" class="btn ghost">清空生词</button>
@@ -112,6 +218,11 @@
 
     <div class="card">
       <h2>古诗词导入</h2>
+      <div class="field">
+        <label class="field-label" for="poemCategory">分类<span class="req">*</span>（下拉选择或手工输入）</label>
+        <input id="poemCategory" class="input" list="categoryOptions"
+               placeholder="例如：三年级下册 / 必背古诗 / 唐诗" autocomplete="off">
+      </div>
       <p class="hint">多首古诗词请用 <code>---</code> 分隔；建议第一行写标题，下面写正文。</p>
       <textarea id="poemInput" rows="8" placeholder="静夜思
 床前明月光，疑是地上霜。
@@ -128,14 +239,44 @@
 
     <div class="card">
       <h2>数据概览</h2>
-      <p id="stats" class="hint">生词 0 个 · 古诗词 0 首</p>
+
+      <!-- 进度条（在最开始） -->
+      <div class="progress-wrap">
+        <div class="progress-top">
+          <span class="progress-title">📊 掌握进度</span>
+          <div class="progress-right">
+            <select id="overviewFilter" class="select select-sm">
+              <option value="all">全部分类</option>
+            </select>
+            <span id="progressValue" class="progress-value">0 / 0（0%）</span>
+          </div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <p class="progress-tip">统计规则：<strong>听写次数 − 错误次数 &gt; 3</strong> 视为已掌握；分母为当前筛选范围内的记录总数。</p>
+      </div>
+
+      <p id="stats" class="hint">全部：生词 0 个 · 古诗词 0 首</p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:66px">类型</th>
+              <th style="width:110px">分类</th>
+              <th>内容</th>
+              <th class="num-col">听写次数</th>
+              <th class="num-col">错误次数</th>
+            </tr>
+          </thead>
+          <tbody id="dataTableBody"></tbody>
+        </table>
+      </div>
       <div class="row">
         <button id="exportBtn" class="btn export">导出全部数据</button>
-        <button id="importJsonBtn" class="btn import">导入JSON</button>
+        <button id="importJsonBtn" class="btn import">导入数据</button>
         <button id="clearAllBtn" class="btn danger">清空全部数据</button>
       </div>
       <p class="hint" style="margin:12px 0 0">
-        导出：将全部生词、古诗词及其听写次数保存为 JSON 文件。<br>
+        导出：将全部分类下的生词（含拼音）、古诗词及其听写次数、错误次数保存为 JSON 文件。<br>
         导入JSON：选择之前导出的备份文件，可选择「合并」或「覆盖」现有数据。
       </p>
       <input type="file" id="jsonFileInput" accept=".json,application/json" hidden>
@@ -145,12 +286,28 @@
   <!-- ============ 听写面板 ============ -->
   <section id="panel-dictation" class="panel">
     <div class="card">
+      <div class="field" style="margin-bottom:12px">
+        <label class="field-label" for="dictationFilter">听写分类</label>
+        <select id="dictationFilter" class="select">
+          <option value="all">全部分类</option>
+        </select>
+      </div>
       <div class="row" style="margin-top:0">
         <button id="generateBtn" class="btn primary">生成本次听写</button>
         <button id="playBtn" class="btn play" disabled>开始听写</button>
         <button id="checkBtn" class="btn ghost" disabled>检查</button>
+        <label class="switch-check">
+          <input type="checkbox" id="showPinyinChk" checked>
+          <span>听写时显示拼音提示</span>
+        </label>
       </div>
-      <p id="status" class="status">请先点击「生成本次听写」。</p>
+      <p id="status" class="status">请先选择分类并点击「生成本次听写」，根据该分类下的生词随机生成词语清单，优先挑选听写次数最少的词。</p>
+    </div>
+
+    <div class="card" id="pinyinCard" style="display:none">
+      <h2>拼音提示</h2>
+      <p class="hint">根据下面的拼音，写出对应的词语。</p>
+      <div id="pinyinHint" class="pinyin-hint"></div>
     </div>
 
     <div class="card" id="hintCard" style="display:none">
@@ -161,13 +318,27 @@
 
     <div class="card" id="answerCard" style="display:none">
       <h2>听写结果</h2>
+
       <h3 class="sub-title">本次生词（<span id="wordCount">0</span> 个）</h3>
+      <p class="hint" style="margin-bottom:10px">勾选写错的生词（可多选），提交后对应错误次数 +1。</p>
       <div id="wordList" class="word-list"></div>
+      <div class="row">
+        <button id="submitWordWrongBtn" class="btn danger" disabled>提交错误标记（生词）</button>
+      </div>
+
       <h3 class="sub-title">古诗词</h3>
       <div id="poemFull" class="poem-full"></div>
+      <div class="row">
+        <button id="submitPoemWrongBtn" class="btn danger" disabled>标记本篇古诗词错误</button>
+      </div>
+
+      <p id="markMsg" class="hint" style="margin:14px 0 0"></p>
     </div>
   </section>
 </div>
+
+<!-- 分类候选（下拉选择 + 手工输入） -->
+<datalist id="categoryOptions"></datalist>
 
 <script>
 (function () {
@@ -179,9 +350,10 @@
   const WORD_PER_ROUND = 20;   // 每次听写抽取生词数
   const REPEAT_TIMES   = 3;    // 每个生词重复次数
   const REPEAT_GAP_MS  = 2000; // 每次重复间隔（毫秒）
+  const MASTER_DIFF    = 3;    // 掌握判定：听写次数 - 错误次数 > 3
 
-  let vocab = [];   // [{ content: '词语', count: 0 }]
-  let poems = [];   // [{ content: '整首诗', count: 0 }]
+  let vocab = [];   // [{ content, pinyin, count, wrong, category }]
+  let poems = [];   // [{ content, pinyin, count, wrong, category }]
   let current = { words: [], poem: null };
 
   let playing = false;      // 是否正在播放
@@ -190,30 +362,68 @@
 
   /* ================= 元素引用 ================= */
   const $ = id => document.getElementById(id);
-  const statsEl       = $('stats');
-  const vocabInput    = $('vocabInput');
-  const poemInput     = $('poemInput');
-  const generateBtn   = $('generateBtn');
-  const playBtn       = $('playBtn');
-  const checkBtn      = $('checkBtn');
-  const statusEl      = $('status');
-  const hintCard      = $('hintCard');
-  const poemHintEl    = $('poemHint');
-  const answerCard    = $('answerCard');
-  const wordListEl    = $('wordList');
-  const wordCountEl   = $('wordCount');
-  const poemFullEl    = $('poemFull');
-  const jsonFileInput = $('jsonFileInput');
+  const statsEl         = $('stats');
+  const dataTableBody   = $('dataTableBody');
+  const vocabInput      = $('vocabInput');
+  const poemInput       = $('poemInput');
+  const vocabCategory   = $('vocabCategory');
+  const poemCategory    = $('poemCategory');
+  const overviewFilter  = $('overviewFilter');
+  const dictationFilter = $('dictationFilter');
+  const progressFill    = $('progressFill');
+  const progressValue   = $('progressValue');
+  const generateBtn     = $('generateBtn');
+  const playBtn         = $('playBtn');
+  const checkBtn        = $('checkBtn');
+  const statusEl        = $('status');
+  const pinyinCard      = $('pinyinCard');
+  const pinyinHintEl    = $('pinyinHint');
+  const showPinyinChk   = $('showPinyinChk');
+  const hintCard        = $('hintCard');
+  const poemHintEl      = $('poemHint');
+  const answerCard      = $('answerCard');
+  const wordListEl      = $('wordList');
+  const wordCountEl     = $('wordCount');
+  const poemFullEl      = $('poemFull');
+  const jsonFileInput   = $('jsonFileInput');
+  const submitWordWrongBtn = $('submitWordWrongBtn');
+  const submitPoemWrongBtn = $('submitPoemWrongBtn');
+  const markMsg         = $('markMsg');
 
   /* ================= 本地存储 ================= */
+  function normalizeRecord(x) {
+    if (typeof x === 'string') {
+      const s = x.trim();
+      if (!s) return null;
+      return { content: s, pinyin: '', count: 0, wrong: 0, category: '未分类' };
+    }
+    if (!x || typeof x !== 'object') return null;
+
+    const content = String(x.content == null ? '' : x.content).trim();
+    if (!content) return null;
+
+    let count = Number(x.count), wrong = Number(x.wrong);
+    if (!Number.isFinite(count) || count < 0) count = 0;
+    if (!Number.isFinite(wrong) || wrong < 0) wrong = 0;
+
+    const category = String(x.category == null ? '' : x.category).trim() || '未分类';
+    const pinyin = String(x.pinyin == null ? '' : x.pinyin).trim();
+
+    return {
+      content: content,
+      pinyin: pinyin,
+      count: Math.floor(count),
+      wrong: Math.floor(wrong),
+      category: category
+    };
+  }
+
   function loadData() {
     try { vocab = JSON.parse(localStorage.getItem(VOCAB_KEY)) || []; } catch (e) { vocab = []; }
     try { poems = JSON.parse(localStorage.getItem(POEM_KEY))  || []; } catch (e) { poems = []; }
-    // 兼容纯字符串的旧数据
-    vocab = vocab.map(x => (typeof x === 'string' ? { content: x, count: 0 } : x))
-                 .filter(x => x && x.content);
-    poems = poems.map(x => (typeof x === 'string' ? { content: x, count: 0 } : x))
-                 .filter(x => x && x.content);
+    // 兼容旧数据：纯字符串 / 缺少 category / 缺少 wrong / 缺少 pinyin
+    vocab = vocab.map(normalizeRecord).filter(Boolean);
+    poems = poems.map(normalizeRecord).filter(Boolean);
   }
   function saveData() {
     localStorage.setItem(VOCAB_KEY, JSON.stringify(vocab));
@@ -227,19 +437,162 @@
 
   function setStatus(msg) { statusEl.textContent = msg; }
 
-  function renderStats() {
-    statsEl.textContent = `生词 ${vocab.length} 个 · 古诗词 ${poems.length} 首`;
+  function getCategories() {
+    const set = new Set();
+    vocab.forEach(v => { if (v.category) set.add(v.category); });
+    poems.forEach(p => { if (p.category) set.add(p.category); });
+    return Array.from(set);
   }
 
-  // 抽取 n 条：优先抽「听写次数」少的，同次数之间随机
-  function pickRecords(arr, n) {
-    const copy = arr.slice();
-    for (let i = copy.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [copy[i], copy[j]] = [copy[j], copy[i]];
+  // 刷新两个分类下拉框 + datalist 候选
+  function refreshCategorySelects() {
+    const cats = getCategories();
+
+    [overviewFilter, dictationFilter].forEach(sel => {
+      const prev = sel.value;
+      sel.innerHTML = '<option value="all">全部分类</option>' +
+        cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+      sel.value = (prev === 'all' || cats.indexOf(prev) !== -1) ? prev : 'all';
+    });
+
+    // 只展示已导入数据中真实存在的分类，不预置任何默认分类
+    $('categoryOptions').innerHTML =
+      cats.map(c => `<option value="${esc(c)}"></option>`).join('');
+  }
+
+  /**
+   * 解析一条生词导入项，支持：
+   *   踌躇 chóu chú  /  踌躇（chóu chú）  /  踌躇|chóu chú  /  踌躇：chóu chú
+   * 返回 { content, pinyin }；无法解析返回 null
+   */
+  function parseVocabEntry(raw) {
+    const text = String(raw == null ? '' : raw).trim();
+    if (!text) return null;
+
+    let content = text;
+    let pinyin = '';
+    let m;
+
+    if ((m = text.match(/^(.+?)\s*[|｜]\s*(.*)$/))) {
+      // 竖线分隔
+      content = m[1]; pinyin = m[2];
+    } else if ((m = text.match(/^(.+?)\s*[（(]\s*([^（）()]*?)\s*[）)]\s*$/))) {
+      // 括号分隔
+      content = m[1]; pinyin = m[2];
+    } else if ((m = text.match(/^(.+?)\s*[:：]\s*(.+)$/))) {
+      // 冒号分隔
+      content = m[1]; pinyin = m[2];
+    } else if ((m = text.match(/^(\S+)\s+(\S[\s\S]*)$/))) {
+      // 空白分隔：第一个空白之前为词语，其余为拼音
+      content = m[1]; pinyin = m[2];
     }
-    copy.sort((a, b) => (a.count || 0) - (b.count || 0)); // sort 稳定，保留随机性
-    return copy.slice(0, n);
+
+    content = content.trim();
+    // 去掉拼音前的连接符 / 冒号等
+    pinyin = pinyin.trim().replace(/^[-–—_~～:：]+\s*/, '').trim();
+
+    if (!content) return null;
+    return { content: content, pinyin: pinyin };
+  }
+
+  /* ================= 数据概览（进度条 + 统计 + 表格） ================= */
+  function buildRows() {
+    const rows = [];
+    vocab.forEach(v => rows.push({
+      type: 'vocab', label: '生词',
+      content: v.content, pinyin: v.pinyin || '',
+      count: v.count || 0, wrong: v.wrong || 0, category: v.category
+    }));
+    poems.forEach(p => rows.push({
+      type: 'poem', label: '古文',
+      content: p.content, pinyin: '',
+      count: p.count || 0, wrong: p.wrong || 0, category: p.category
+    }));
+    return rows;
+  }
+
+  function renderOverview() {
+    const filter = overviewFilter.value || 'all';
+    const allRows = buildRows();
+    const rows = filter === 'all' ? allRows : allRows.filter(r => r.category === filter);
+
+    // ---- 统计文字 ----
+    const vCount = rows.filter(r => r.type === 'vocab').length;
+    const pCount = rows.filter(r => r.type === 'poem').length;
+    statsEl.textContent = (filter === 'all' ? '全部' : `分类「${filter}」`)
+      + `：生词 ${vCount} 个 · 古诗词 ${pCount} 首`;
+
+    // ---- 进度条 ----
+    const total  = rows.length;
+    const passed = rows.filter(r => (r.count - r.wrong) > MASTER_DIFF).length;
+    const pct    = total ? Math.round(passed / total * 100) : 0;
+
+    progressFill.style.width = pct + '%';
+    progressValue.textContent = `${passed} / ${total}（${pct}%）`;
+
+    // ---- 明细表 ----
+    if (!rows.length) {
+      dataTableBody.innerHTML =
+        '<tr><td colspan="5" class="empty" style="text-align:center;padding:22px">' +
+        (allRows.length ? '该分类下暂无数据' : '暂无数据，请先在上方导入生词或古诗词') +
+        '</td></tr>';
+      return;
+    }
+
+    dataTableBody.innerHTML = rows.map(r => {
+      const oneLine = esc(r.content.replace(/\s*\n+\s*/g, ' / '));
+      const pinyinHtml = r.pinyin ? `<span class="cell-pinyin">${esc(r.pinyin)}</span>` : '';
+      const wrongCls = r.wrong > 0 ? 'wrong-num' : '';
+      const tagCls = r.type === 'vocab' ? 'tag-vocab' : 'tag-poem';
+      return `<tr>
+        <td><span class="tag ${tagCls}">${r.label}</span></td>
+        <td><span class="tag tag-cat">${esc(r.category)}</span></td>
+        <td class="cell-content">${oneLine}${pinyinHtml}</td>
+        <td class="num-col">${r.count}</td>
+        <td class="num-col ${wrongCls}">${r.wrong}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function refreshAll() {
+    refreshCategorySelects();
+    renderOverview();
+  }
+
+  function shuffleArr(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  /**
+   * 抽取 n 条记录：
+   *   1) 优先挑选「听写次数」少的；
+   *   2) 听写次数相同时，优先挑选「错误次数」多的；
+   *   3) 若候选超过 n 条，则在同优先级的候选集合中随机挑选。
+   */
+  function pickRecords(arr, n) {
+    if (!arr || !arr.length || n <= 0) return [];
+    const copy = shuffleArr(arr.slice());
+
+    copy.sort((a, b) => {
+      const d = (a.count || 0) - (b.count || 0);
+      if (d !== 0) return d;
+      return (b.wrong || 0) - (a.wrong || 0);
+    });
+
+    if (copy.length <= n) return copy;
+
+    const keyOf = it => (it.count || 0) + '_' + (it.wrong || 0);
+    const cutKey = keyOf(copy[n - 1]);
+
+    const head = copy.slice(0, n).filter(it => keyOf(it) !== cutKey);
+    const pool = shuffleArr(copy.filter(it => keyOf(it) === cutKey));
+    const need = n - head.length;
+
+    return head.concat(pool.slice(0, need));
   }
 
   // 取文本中的前 n 个汉字
@@ -281,54 +634,102 @@
     }
   }
 
+  /* ---------- 拼音提示展示 ---------- */
+  function showPinyinHint(record) {
+    if (!showPinyinChk.checked || !record || !record.pinyin) {
+      pinyinCard.style.display = 'none';
+      pinyinHintEl.textContent = '';
+      return;
+    }
+    pinyinHintEl.textContent = record.pinyin;
+    pinyinCard.style.display = 'block';
+  }
+  function hidePinyinHint() {
+    pinyinCard.style.display = 'none';
+    pinyinHintEl.textContent = '';
+  }
+
   /* ================= 导入功能 ================= */
   $('importVocabBtn').addEventListener('click', function () {
+    const category = vocabCategory.value.trim();
+    if (!category) {
+      alert('请先选择或输入分类（必填）。');
+      vocabCategory.focus();
+      return;
+    }
+
     const raw = vocabInput.value.trim();
     if (!raw) { alert('请先输入生词内容。'); return; }
 
-    // 以逗号分隔（兼容中英文逗号、顿号、分号、换行）
-    const items = raw.split(/[,，、;；\r\n]+/).map(s => s.trim()).filter(Boolean);
+    const items = raw.split(/[,，、;；\r\n]+/)
+      .map(parseVocabEntry)
+      .filter(Boolean);
     if (!items.length) { alert('没有解析到有效的生词。'); return; }
 
-    let added = 0, dup = 0;
-    items.forEach(text => {
-      if (vocab.some(v => v.content === text)) { dup++; return; }
-      vocab.push({ content: text, count: 0 });
+    let added = 0, dup = 0, updated = 0;
+    items.forEach(item => {
+      const exist = vocab.find(v => v.content === item.content && v.category === category);
+      if (exist) {
+        if (item.pinyin && exist.pinyin !== item.pinyin) {
+          exist.pinyin = item.pinyin;
+          updated++;
+        } else {
+          dup++;
+        }
+        return;
+      }
+      vocab.push({
+        content: item.content,
+        pinyin: item.pinyin,
+        count: 0,
+        wrong: 0,
+        category: category
+      });
       added++;
     });
 
     saveData();
-    renderStats();
+    refreshAll();
     vocabInput.value = '';
-    alert(`导入完成：新增 ${added} 个生词${dup ? `，跳过重复 ${dup} 个` : ''}。`);
+
+    let msg = `导入完成（分类「${category}」）：新增 ${added} 个生词`;
+    if (updated) msg += `，更新拼音 ${updated} 个`;
+    if (dup) msg += `，跳过重复 ${dup} 个`;
+    alert(msg + '。');
   });
 
   $('importPoemBtn').addEventListener('click', function () {
+    const category = poemCategory.value.trim();
+    if (!category) {
+      alert('请先选择或输入分类（必填）。');
+      poemCategory.focus();
+      return;
+    }
+
     const raw = poemInput.value.trim();
     if (!raw) { alert('请先输入古诗词内容。'); return; }
 
-    // 以 --- 分隔
     const items = raw.split(/-{3,}/).map(s => s.trim()).filter(Boolean);
     if (!items.length) { alert('没有解析到有效的古诗词。'); return; }
 
     let added = 0, dup = 0;
     items.forEach(text => {
-      if (poems.some(p => p.content === text)) { dup++; return; }
-      poems.push({ content: text, count: 0 });
+      if (poems.some(p => p.content === text && p.category === category)) { dup++; return; }
+      poems.push({ content: text, pinyin: '', count: 0, wrong: 0, category: category });
       added++;
     });
 
     saveData();
-    renderStats();
+    refreshAll();
     poemInput.value = '';
-    alert(`导入完成：新增 ${added} 首古诗词${dup ? `，跳过重复 ${dup} 首` : ''}。`);
+    alert(`导入完成（分类「${category}」）：新增 ${added} 首古诗词${dup ? `，跳过重复 ${dup} 首` : ''}。`);
   });
 
   $('clearVocabBtn').addEventListener('click', function () {
     if (!vocab.length) { alert('当前没有生词。'); return; }
     if (!confirm(`确定清空全部 ${vocab.length} 个生词吗？`)) return;
     vocab = [];
-    saveData(); renderStats();
+    saveData(); refreshAll();
     current = { words: [], poem: null };
     resetDictationView();
   });
@@ -337,7 +738,7 @@
     if (!poems.length) { alert('当前没有古诗词。'); return; }
     if (!confirm(`确定清空全部 ${poems.length} 首古诗词吗？`)) return;
     poems = [];
-    saveData(); renderStats();
+    saveData(); refreshAll();
     current = { words: [], poem: null };
     resetDictationView();
   });
@@ -345,7 +746,7 @@
   $('clearAllBtn').addEventListener('click', function () {
     if (!confirm('确定清空全部生词与古诗词数据吗？此操作不可恢复。')) return;
     vocab = []; poems = [];
-    saveData(); renderStats();
+    saveData(); refreshAll();
     current = { words: [], poem: null };
     resetDictationView();
   });
@@ -366,12 +767,18 @@
 
     const data = {
       app: '语文听写助手',
-      version: 1,
+      version: 4,
       exportedAt: new Date().toISOString(),
       vocabTotal: vocab.length,
       poemTotal: poems.length,
-      vocab: vocab.map(v => ({ content: v.content, count: v.count || 0 })),
-      poems: poems.map(p => ({ content: p.content, count: p.count || 0 }))
+      vocab: vocab.map(v => ({
+        content: v.content, pinyin: v.pinyin || '',
+        count: v.count || 0, wrong: v.wrong || 0, category: v.category
+      })),
+      poems: poems.map(p => ({
+        content: p.content, pinyin: '',
+        count: p.count || 0, wrong: p.wrong || 0, category: p.category
+      }))
     };
 
     const json = JSON.stringify(data, null, 2);
@@ -393,7 +800,7 @@
 
   /* ================= 导入 JSON ================= */
   $('importJsonBtn').addEventListener('click', function () {
-    jsonFileInput.value = ''; // 允许重复选择同一个文件
+    jsonFileInput.value = '';
     jsonFileInput.click();
   });
 
@@ -421,21 +828,13 @@
     reader.readAsText(file, 'utf-8');
   });
 
-  // 把数组规范化为 [{ content, count }]，无法识别的项忽略
+  // 把数组规范化为 [{ content, pinyin, count, wrong, category }]，无法识别的项忽略
   function normalizeList(arr) {
     if (!Array.isArray(arr)) return null;
     const out = [];
     arr.forEach(item => {
-      if (typeof item === 'string') {
-        const c = item.trim();
-        if (c) out.push({ content: c, count: 0 });
-      } else if (item && typeof item === 'object' && typeof item.content === 'string') {
-        const c = item.content.trim();
-        if (!c) return;
-        let n = Number(item.count);
-        if (!Number.isFinite(n) || n < 0) n = 0;
-        out.push({ content: c, count: Math.floor(n) });
-      }
+      const rec = normalizeRecord(item);
+      if (rec) out.push(rec);
     });
     return out;
   }
@@ -462,15 +861,13 @@
       return;
     }
 
-    // 第一步：选择合并还是覆盖
     const mergeChosen = confirm(
       `文件包含：生词 ${vList.length} 个，古诗词 ${pList.length} 首。\n\n` +
-      `点击「确定」→ 合并到现有数据（跳过重复内容）\n` +
+      `点击「确定」→ 合并到现有数据（同分类同内容跳过，拼音可补全）\n` +
       `点击「取消」→ 覆盖现有全部数据`
     );
 
     if (!mergeChosen) {
-      // 覆盖：再确认一次，避免误操作
       const ok = confirm(
         `再次确认：将清空当前 ${vocab.length} 个生词、${poems.length} 首古诗词，` +
         `并完全替换为文件中的数据。\n\n此操作不可撤销，确定继续吗？`
@@ -480,36 +877,41 @@
       vocab = vList.slice();
       poems = pList.slice();
       saveData();
-      renderStats();
+      refreshAll();
       current = { words: [], poem: null };
       resetDictationView();
       alert(`覆盖完成：现有生词 ${vocab.length} 个，古诗词 ${poems.length} 首。`);
       return;
     }
 
-    // 合并：按内容去重，保留已有记录（含其听写次数）
-    let vAdded = 0, vDup = 0, pAdded = 0, pDup = 0;
+    // 合并：按「分类 + 内容」去重；已存在但缺拼音时补全拼音
+    let vAdded = 0, vDup = 0, vUpd = 0, pAdded = 0, pDup = 0;
 
     vList.forEach(item => {
-      if (vocab.some(v => v.content === item.content)) { vDup++; return; }
+      const exist = vocab.find(v => v.content === item.content && v.category === item.category);
+      if (exist) {
+        if (item.pinyin && exist.pinyin !== item.pinyin) { exist.pinyin = item.pinyin; vUpd++; }
+        else { vDup++; }
+        return;
+      }
       vocab.push(item);
       vAdded++;
     });
 
     pList.forEach(item => {
-      if (poems.some(p => p.content === item.content)) { pDup++; return; }
+      if (poems.some(p => p.content === item.content && p.category === item.category)) { pDup++; return; }
       poems.push(item);
       pAdded++;
     });
 
     saveData();
-    renderStats();
+    refreshAll();
     current = { words: [], poem: null };
     resetDictationView();
 
     alert(
       `合并完成：\n` +
-      `· 生词新增 ${vAdded} 个（跳过重复 ${vDup} 个）\n` +
+      `· 生词新增 ${vAdded} 个（跳过重复 ${vDup} 个${vUpd ? `，补全拼音 ${vUpd} 个` : ''}）\n` +
       `· 古诗词新增 ${pAdded} 首（跳过重复 ${pDup} 首）\n\n` +
       `当前共 ${vocab.length} 个生词、${poems.length} 首古诗词。`
     );
@@ -518,28 +920,37 @@
   function resetDictationView() {
     hintCard.style.display = 'none';
     answerCard.style.display = 'none';
-    setStatus('请先点击「生成本次听写」。');
+    hidePinyinHint();
+    markMsg.textContent = '';
+    setStatus('请先选择分类并点击「生成本次听写」。');
     refreshButtons();
   }
 
-  /* ================= 生成听写内容 ================= */
+  /* ================= 生成听写内容（按分类） ================= */
   generateBtn.addEventListener('click', function () {
     if (playing) return;
 
-    if (!vocab.length && !poems.length) {
-      alert('还没有数据，请先到「导入」页导入生词或古诗词。');
+    const filter = dictationFilter.value || 'all';
+    const vocabPool = filter === 'all' ? vocab : vocab.filter(v => v.category === filter);
+    const poemPool  = filter === 'all' ? poems : poems.filter(p => p.category === filter);
+
+    if (!vocabPool.length && !poemPool.length) {
+      alert(filter === 'all'
+        ? '还没有数据，请先到「导入」页导入生词或古诗词。'
+        : `分类「${filter}」下没有生词或古诗词，请先导入或切换分类。`);
       return;
     }
 
-    const words = pickRecords(vocab, WORD_PER_ROUND);
-    const poem  = pickRecords(poems, 1)[0] || null;
+    const words = pickRecords(vocabPool, WORD_PER_ROUND);
+    const poem  = pickRecords(poemPool, 1)[0] || null;
 
     current = { words, poem };
 
-    // 记录听写次数（默认 0，每生成一次 +1）
+    // 记录听写次数（每生成一次 +1）
     words.forEach(w => { w.count = (w.count || 0) + 1; });
     if (poem) poem.count = (poem.count || 0) + 1;
     saveData();
+    refreshAll();
 
     // 只展示古诗词前 5 个汉字，不展示生词
     if (poem) {
@@ -550,13 +961,37 @@
     }
 
     answerCard.style.display = 'none';
+    hidePinyinHint();
+    markMsg.textContent = '';
+    submitWordWrongBtn.disabled = !words.length;
+    submitPoemWrongBtn.disabled = !poem;
 
-    const parts = [];
-    parts.push(`生词 ${words.length} 个`);
-    parts.push(poem ? '古诗词 1 首' : '古诗词 0 首');
-    setStatus(`✅ 已生成本次听写：${parts.join(' + ')}。点击「开始听写」播放生词。`);
+    const catLabel = filter === 'all' ? '全部分类' : `分类「${filter}」`;
+    setStatus(
+      `✅ 已生成听写（${catLabel}）：生词 ${words.length} 个 + 古诗词 ${poem ? 1 : 0} 首。` +
+      `点击「开始听写」播放生词。`
+    );
 
     refreshButtons();
+  });
+
+  // 切换听写分类：重置本次听写
+  dictationFilter.addEventListener('change', function () {
+    if (playing) stopPlay();
+    current = { words: [], poem: null };
+    resetDictationView();
+    const filter = dictationFilter.value;
+    setStatus(filter === 'all'
+      ? '已切换为「全部分类」，请点击「生成本次听写」。'
+      : `已切换为分类「${filter}」，请点击「生成本次听写」。`);
+  });
+
+  // 切换概览筛选：只重绘概览
+  overviewFilter.addEventListener('change', renderOverview);
+
+  // 取消拼音提示勾选时立即隐藏
+  showPinyinChk.addEventListener('change', function () {
+    if (!showPinyinChk.checked) hidePinyinHint();
   });
 
   /* ================= 语音播放 ================= */
@@ -588,7 +1023,7 @@
       };
       currentResolve = finish;
 
-      const timer = setTimeout(finish, 8000); // 兜底，避免卡死
+      const timer = setTimeout(finish, 8000);
       u.onend = finish;
       u.onerror = finish;
 
@@ -596,7 +1031,6 @@
     });
   }
 
-  // 可被 stopFlag 打断的等待
   async function wait(ms) {
     const step = 100;
     let elapsed = 0;
@@ -626,7 +1060,6 @@
       return;
     }
 
-    // 确保语音列表已加载
     window.speechSynthesis.getVoices();
 
     stopFlag = false;
@@ -646,9 +1079,9 @@
       for (let r = 0; r < REPEAT_TIMES; r++) {
         if (stopFlag) break;
         setStatus(`🔊 正在播放第 ${i + 1}/${words.length} 个生词（第 ${r + 1}/${REPEAT_TIMES} 遍）`);
+        showPinyinHint(words[i]);
         await speak(words[i].content);
         if (stopFlag) break;
-        // 每个生词的 3 次之间间隔 2 秒；最后一个生词的最后一遍不再等待
         if (!(i === words.length - 1 && r === REPEAT_TIMES - 1)) {
           await wait(REPEAT_GAP_MS);
         }
@@ -659,6 +1092,7 @@
     const wasStopped = stopFlag;
     playing = false;
     stopFlag = false;
+    hidePinyinHint();
     refreshButtons();
     setStatus(wasStopped
       ? '⏹ 已停止播放。'
@@ -677,23 +1111,74 @@
   checkBtn.addEventListener('click', function () {
     if (!hasGenerated()) { alert('请先点击「生成本次听写」。'); return; }
 
-    // 生词列表
+    hidePinyinHint();
+
     if (current.words.length) {
-      wordListEl.innerHTML = current.words
-        .map(w => `<span class="word">${esc(w.content)}</span>`)
-        .join('');
+      wordListEl.innerHTML = current.words.map((w, i) => {
+        const py = w.pinyin
+          ? `<span class="word-pinyin">${esc(w.pinyin)}</span>`
+          : '';
+        return `<label class="word-check">
+           <input type="checkbox" data-index="${i}">
+           <span class="word">
+             <span class="word-text">${esc(w.content)}</span>
+             ${py}
+           </span>
+         </label>`;
+      }).join('');
     } else {
       wordListEl.innerHTML = '<span class="empty">本次没有生词</span>';
     }
     wordCountEl.textContent = current.words.length;
 
-    // 古诗词全文
     poemFullEl.textContent = current.poem
-      ? current.poem.content
+      ? `【${esc(current.poem.category)}】\n${current.poem.content}`
       : '本次没有古诗词';
+
+    submitWordWrongBtn.disabled = !current.words.length;
+    submitPoemWrongBtn.disabled = !current.poem;
+    markMsg.textContent = '';
 
     answerCard.style.display = 'block';
     answerCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  /* ================= 标记错误 ================= */
+  submitWordWrongBtn.addEventListener('click', function () {
+    if (!current.words.length) { alert('本次没有生词。'); return; }
+
+    const checked = wordListEl.querySelectorAll('input[type="checkbox"]:checked');
+    if (!checked.length) {
+      alert('请先勾选至少一个写错的生词。');
+      return;
+    }
+
+    let n = 0;
+    checked.forEach(cb => {
+      const idx = Number(cb.dataset.index);
+      const w = current.words[idx];
+      if (!w) return;
+      w.wrong = (w.wrong || 0) + 1;
+      cb.disabled = true;
+      n++;
+    });
+
+    saveData();
+    refreshAll();
+
+    submitWordWrongBtn.disabled = true;
+    markMsg.textContent = `✅ 已提交：${n} 个生词的错误次数 +1。`;
+  });
+
+  submitPoemWrongBtn.addEventListener('click', function () {
+    if (!current.poem) { alert('本次没有古诗词。'); return; }
+
+    current.poem.wrong = (current.poem.wrong || 0) + 1;
+    saveData();
+    refreshAll();
+
+    submitPoemWrongBtn.disabled = true;
+    markMsg.textContent = '✅ 已提交：本篇古诗词的错误次数 +1。';
   });
 
   /* ================= 标签页切换 ================= */
@@ -709,10 +1194,9 @@
   /* ================= 初始化 ================= */
   function init() {
     loadData();
-    renderStats();
+    refreshAll();
     refreshButtons();
 
-    // 预加载语音列表
     if ('speechSynthesis' in window) {
       window.speechSynthesis.getVoices();
       window.speechSynthesis.onvoiceschanged = function () {
@@ -720,7 +1204,6 @@
       };
     }
 
-    // 离开页面时停止播放
     window.addEventListener('beforeunload', function () {
       try { window.speechSynthesis.cancel(); } catch (e) {}
     });
