@@ -240,7 +240,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
             font-size: 0.9rem;
         }
         .error-list .err-info {
@@ -248,10 +249,19 @@
             flex-direction: column;
             gap: 2px;
             min-width: 0;
+            flex: 1 1 140px;
         }
         .error-list .err-word {
             color: #e53e3e;
             font-weight: 600;
+            word-break: break-all;
+        }
+        /* ===== 错词回顾里默认隐藏的英文单词 ===== */
+        .error-list .err-answer {
+            color: #2b6cb0;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
             word-break: break-all;
         }
         .error-list .err-meta {
@@ -311,6 +321,7 @@
         <textarea id="wordInput" placeholder="apple=苹果, banana=香蕉, orange=橙子"></textarea>
         <div class="btn-row">
             <button class="btn-primary" onclick="importWords()">导入单词</button>
+            <button class="btn-secondary" onclick="exportData()">导出数据</button>
             <button class="btn-danger" onclick="clearAllWords()">清空词库</button>
         </div>
     </div>
@@ -327,7 +338,7 @@
         </div>
         <div class="stat-item">
             <div class="num" id="wrongWords">0</div>
-            <div class="label">错词数</div>
+            <div class="label">待复习错词</div>
         </div>
         <div class="stat-item">
             <div class="num" id="sessionProgress">0/5</div>
@@ -387,25 +398,29 @@
     const VOICE_KEY = 'english_dictation_voice';
     const CATEGORY_KEY = 'english_dictation_categories';
     const CURRENT_CATEGORY_KEY = 'english_dictation_current_category';
-    const DEFAULT_CATEGORY = '默认分类';
+    const LEGACY_CATEGORY = '默认分类';   // 旧版数据中的默认分类，加载时自动迁移为空分类
+    const UNCATEGORIZED_LABEL = '未分类'; // 空分类在界面上的显示名（仅用于统计/错词列表）
     const MASTER_THRESHOLD = 3;   // 净正确次数达到该值即视为「已掌握」
     const ROUND_SIZE = 5;         // 每轮听写的单词数量
 
     /**
      * 词库数据结构：
      * allWords = [
-     *   { word: 'apple', meaning: '苹果', category: '水果', dictCount: 5, errorCount: 2 },
+     *   { word: 'apple', meaning: '苹果', category: '水果',
+     *     dictCount: 5, errorCount: 2, inReview: true },
      *   ...
      * ]
      * meaning    —— 中文含义（提示用，可为空字符串）
      * category   —— 所属分类
      * dictCount  —— 听写总次数
      * errorCount —— 错误次数
+     * inReview   —— 是否在「错词回顾」中（默认 false；听写答错时置为 true，
+     *               点击「斩」后置回 false）
      * 净正确次数 = dictCount - errorCount
      */
     let allWords = [];
     let categories = [];                      // 全部分类名
-    let currentCategory = DEFAULT_CATEGORY;   // 导入时使用的分类
+    let currentCategory = '';                 // 导入时使用的分类（空 = 未选择）
 
     let currentWordObj = null;    // 当前听写的单词对象
     let roundWords = [];          // 本轮抽中的 5 个单词对象
@@ -426,18 +441,26 @@
     function normalizeWordItem(item) {
         if (typeof item === 'string') {
             const w = item.trim().toLowerCase();
-            return w ? { word: w, meaning: '', category: DEFAULT_CATEGORY, dictCount: 0, errorCount: 0 } : null;
+            return w ? {
+                word: w, meaning: '', category: '',
+                dictCount: 0, errorCount: 0, inReview: false
+            } : null;
         }
         if (item && typeof item === 'object' && typeof item.word === 'string') {
             const w = item.word.trim().toLowerCase();
             if (!w) return null;
+            // ★ 旧版「默认分类」自动迁移为空分类（界面显示为「未分类」）
+            let category = (typeof item.category === 'string' && item.category.trim())
+                ? item.category.trim() : '';
+            if (category === LEGACY_CATEGORY) category = '';
             return {
                 word: w,
                 meaning: typeof item.meaning === 'string' ? item.meaning.trim() : '',
-                category: (typeof item.category === 'string' && item.category.trim())
-                    ? item.category.trim() : DEFAULT_CATEGORY,
+                category: category,
                 dictCount: Math.max(0, parseInt(item.dictCount, 10) || 0),
-                errorCount: Math.max(0, parseInt(item.errorCount, 10) || 0)
+                errorCount: Math.max(0, parseInt(item.errorCount, 10) || 0),
+                // ★ 错词回顾标记，默认 false（兼容旧数据）
+                inReview: item.inReview === true
             };
         }
         return null;
@@ -515,14 +538,13 @@
             categories = [];
         }
 
-        // 把词库中已存在的分类合并进来
+        // 把词库中已存在的分类合并进来（空分类不显示在列表中）
         allWords.forEach(w => {
             if (w.category && !categories.includes(w.category)) categories.push(w.category);
         });
-        if (!categories.includes(DEFAULT_CATEGORY)) categories.unshift(DEFAULT_CATEGORY);
 
         const saved = localStorage.getItem(CURRENT_CATEGORY_KEY);
-        currentCategory = (saved && categories.includes(saved)) ? saved : DEFAULT_CATEGORY;
+        currentCategory = (saved && categories.includes(saved)) ? saved : '';
 
         renderCategorySelect();
     }
@@ -539,15 +561,16 @@
     function renderCategorySelect() {
         const sel = document.getElementById('categorySelect');
         if (!sel) return;
-        sel.innerHTML = categories
-            .map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`)
-            .join('');
+        sel.innerHTML = '<option value="" disabled>请选择分类</option>' +
+            categories
+                .map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`)
+                .join('');
         sel.value = currentCategory;
     }
 
     function onCategoryChange() {
         const sel = document.getElementById('categorySelect');
-        currentCategory = sel.value || DEFAULT_CATEGORY;
+        currentCategory = sel.value;
         saveCategories();
     }
 
@@ -567,7 +590,8 @@
     function updateStats() {
         const total = allWords.length;
         const mastered = allWords.filter(w => netScore(w) >= MASTER_THRESHOLD).length;
-        const wrongNum = allWords.filter(w => w.errorCount > 0).length;
+        // ★ 错词数 = 被标记进「错词回顾」的单词数量
+        const wrongNum = allWords.filter(w => w.inReview).length;
 
         // 本轮总词数：本轮已开始用实际抽取数，未开始时按每轮 5 个（词库不足则取词库数）
         const roundTotal = roundWords.length || Math.min(ROUND_SIZE, total);
@@ -593,6 +617,11 @@
 
     // ==================== 导入功能 ====================
     function importWords() {
+        if (!currentCategory) {
+            alert('请先选择分类，或点击「＋ 新建分类」新建一个分类。');
+            return;
+        }
+
         const raw = document.getElementById('wordInput').value.trim();
         if (!raw) { alert('请先输入单词'); return; }
 
@@ -600,7 +629,7 @@
         const entries = raw.split(/[,，、;；\n\r]+/).map(s => s.trim()).filter(Boolean);
         if (entries.length === 0) { alert('未识别到有效单词'); return; }
 
-        const category = currentCategory || DEFAULT_CATEGORY;
+        const category = currentCategory;
         const existMap = new Map(allWords.map(w => [w.word, w]));
 
         let added = 0, filled = 0, skipped = 0;
@@ -626,7 +655,8 @@
                 meaning: parsed.meaning,
                 category: category,
                 dictCount: 0,
-                errorCount: 0
+                errorCount: 0,
+                inReview: false        // ★ 新词默认不在错词回顾中
             };
             allWords.push(obj);
             existMap.set(parsed.word, obj);
@@ -648,18 +678,70 @@
     }
 
     function clearAllWords() {
-        if (!confirm('确定要清空整个词库吗？此操作不可恢复。')) return;
+        if (!confirm('确定要清空整个词库和全部分类吗？此操作不可恢复。')) return;
         allWords = [];
+        categories = [];
+        currentCategory = '';
         roundWords = [];
         sessionDone = [];
         currentWordObj = null;
         isSessionActive = false;
         isSubmitting = false;
         saveWords();
+        saveCategories();          // 把空分类列表写回 localStorage，避免刷新后旧分类复活
+        renderCategorySelect();    // 下拉框立即回到「请选择分类」占位状态
         document.getElementById('currentWordDisplay').textContent = '—';
         resetHint();
         document.getElementById('answerInput').value = '';
         setFeedback('', '');
+    }
+
+    // ==================== 导出数据 ====================
+    function pad2(n) { return String(n).padStart(2, '0'); }
+
+    /**
+     * 把本工具 localStorage 中的 4 个键打包成 JSON 文件下载：
+     * 词库、分类列表、当前分类、语音偏好。
+     */
+    function exportData() {
+        // 导出前先落盘，保证文件内容与 localStorage 一致（顺带写入旧数据迁移后的格式）
+        saveWords();
+        saveCategories();
+
+        if (allWords.length === 0 && categories.length === 0) {
+            alert('当前没有可导出的数据。');
+            return;
+        }
+
+        const data = {
+            app: '英语生词听写小工具',
+            version: 1,
+            exportedAt: new Date().toISOString(),
+            data: {
+                english_dictation_words: allWords,
+                english_dictation_categories: categories,
+                english_dictation_current_category: currentCategory,
+                english_dictation_voice: preferredVoice
+            }
+        };
+
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const now = new Date();
+        const stamp = `${now.getFullYear()}${pad2(now.getMonth() + 1)}${pad2(now.getDate())}`
+            + `_${pad2(now.getHours())}${pad2(now.getMinutes())}`;
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `英语听写数据_${stamp}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+
+        alert(`导出完成：单词 ${allWords.length} 个，分类 ${categories.length} 个。`);
     }
 
     // ==================== 语音合成 ====================
@@ -872,10 +954,13 @@
 
         // —— 更新统计数据 ——
         currentWordObj.dictCount += 1;
-        if (!isRight) currentWordObj.errorCount += 1;
+        if (!isRight) {
+            currentWordObj.errorCount += 1;
+            currentWordObj.inReview = true;   // ★ 答错 → 标记进入错词回顾
+        }
 
         sessionDone.push(correctAnswer);   // 游标前进
-        saveWords();                       // 内部会调用 updateStats() 刷新界面
+        saveWords();                       // 内部会调用 updateStats() 刷新界面与错词列表
 
         if (isRight) {
             setFeedback('✅ 正确！', 'correct');
@@ -901,25 +986,30 @@
     });
 
     // ==================== 错词列表渲染 ====================
+    /**
+     * 仅展示 inReview === true 的单词：
+     *   - 不显示英文单词（可点「显示」临时查看）
+     *   - 显示中文含义 + 朗读按钮 + 显示单词按钮 + 「斩」按钮
+     *   - 点击「斩」将该单词的 inReview 置为 false，移出列表
+     */
     function renderErrorList() {
         const list = document.getElementById('errorList');
 
-        const wrongList = allWords
-            .filter(w => w.errorCount > 0)
+        const reviewList = allWords
+            .filter(w => w.inReview === true)
             .sort((a, b) => {
                 if (b.errorCount !== a.errorCount) return b.errorCount - a.errorCount;
                 return netScore(a) - netScore(b);
             });
 
-        if (wrongList.length === 0) {
+        if (reviewList.length === 0) {
             list.innerHTML = '<li class="empty-tip">暂无错词，继续加油！</li>';
             return;
         }
 
-        list.innerHTML = wrongList.map(w => {
+        list.innerHTML = reviewList.map((w, i) => {
             const metaParts = [];
-            if (w.category) metaParts.push(`[${w.category}]`);
-            if (w.meaning) metaParts.push(w.meaning);
+            metaParts.push(`[${w.category || UNCATEGORIZED_LABEL}]`);
             metaParts.push(`听写 ${w.dictCount} 次`);
             metaParts.push(`错误 ${w.errorCount} 次`);
             metaParts.push(`净正确 ${netScore(w)}`);
@@ -927,15 +1017,43 @@
             return `
             <li>
                 <div class="err-info">
-                    <span class="err-word">${escapeHtml(w.word)}</span>
+                    <span class="err-word">${escapeHtml(w.meaning || '（暂无中文含义）')}</span>
+                    <span class="err-answer hidden" data-answer="${i}">${escapeHtml(w.word)}</span>
                     <span class="err-meta">${escapeHtml(metaParts.join(' · '))}</span>
                 </div>
-                <button class="btn-secondary btn-mini" data-word="${escapeHtml(w.word)}">🔊</button>
+                <button class="btn-secondary btn-mini" data-speak="${i}" title="朗读">🔊</button>
+                <button class="btn-hint btn-mini" data-reveal="${i}">👁 显示</button>
+                <button class="btn-danger btn-mini" data-cut="${i}" title="移出错词回顾">🗡 斩</button>
             </li>`;
         }).join('');
 
-        list.querySelectorAll('button[data-word]').forEach(btn => {
-            btn.addEventListener('click', () => speakText(btn.dataset.word));
+        // 朗读
+        list.querySelectorAll('button[data-speak]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const w = reviewList[Number(btn.dataset.speak)];
+                if (w) speakText(w.word);
+            });
+        });
+
+        // 显示 / 隐藏英文单词
+        list.querySelectorAll('button[data-reveal]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = btn.dataset.reveal;
+                const span = list.querySelector(`span[data-answer="${idx}"]`);
+                if (!span) return;
+                const nowHidden = span.classList.toggle('hidden');
+                btn.textContent = nowHidden ? '👁 显示' : '🙈 隐藏';
+            });
+        });
+
+        // 斩：移出错词回顾
+        list.querySelectorAll('button[data-cut]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const w = reviewList[Number(btn.dataset.cut)];
+                if (!w) return;
+                w.inReview = false;   // ★ 置为 false，不再出现在错词回顾中
+                saveWords();          // 内部会重新渲染列表与统计
+            });
         });
     }
 

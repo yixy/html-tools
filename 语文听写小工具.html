@@ -43,27 +43,31 @@
     display: block; font-size: 14px; font-weight: 600; color: #4a5a75; margin-bottom: 6px;
   }
   .field-label .req { color: #e03131; margin-left: 2px; }
-  .input {
-    width: 100%; max-width: 340px; border: 1px solid #e3e8f0; border-radius: 10px;
-    padding: 10px 12px; font-size: 14px; font-family: inherit; background: #fafbfe;
-    color: inherit; outline: none; transition: .2s;
-  }
-  .input:focus { border-color: #3b6ef6; background: #fff; box-shadow: 0 0 0 3px rgba(59,110,246,.12); }
 
+  /* 下拉选择框 */
   select.select {
-    border: 1px solid #e3e8f0; border-radius: 10px; padding: 10px 12px;
-    font-size: 14px; font-family: inherit; background: #fafbfe; color: inherit;
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    border: 1px solid #e3e8f0; border-radius: 10px;
+    padding: 10px 34px 10px 12px;
+    font-size: 14px; font-family: inherit; background-color: #fafbfe; color: inherit;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5L6 8L9.5 4.5' fill='none' stroke='%239aa5b8' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 13px center;
     outline: none; cursor: pointer; transition: .2s; min-width: 140px;
   }
-  select.select:focus { border-color: #3b6ef6; background: #fff; box-shadow: 0 0 0 3px rgba(59,110,246,.12); }
-  select.select.select-sm { padding: 6px 10px; font-size: 13px; min-width: 130px; border-radius: 8px; }
+  select.select:focus { border-color: #3b6ef6; background-color: #fff; box-shadow: 0 0 0 3px rgba(59,110,246,.12); }
+
+  select.select.select-sm {
+    padding: 6px 30px 6px 10px; font-size: 13px; min-width: 130px;
+    border-radius: 8px; background-position: right 11px center;
+  }
 
   textarea {
     width: 100%; border: 1px solid #e3e8f0; border-radius: 12px; padding: 12px;
     font-size: 14px; font-family: inherit; line-height: 1.8; resize: vertical;
-    outline: none; transition: .2s; background: #fafbfe; color: inherit;
+    outline: none; transition: .2s; background-color: #fafbfe; color: inherit;
   }
-  textarea:focus { border-color: #3b6ef6; background: #fff; box-shadow: 0 0 0 3px rgba(59,110,246,.12); }
+  textarea:focus { border-color: #3b6ef6; background-color: #fff; box-shadow: 0 0 0 3px rgba(59,110,246,.12); }
 
   .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
   .btn {
@@ -200,9 +204,13 @@
     <div class="card">
       <h2>生词导入</h2>
       <div class="field">
-        <label class="field-label" for="vocabCategory">分类<span class="req">*</span>（下拉选择或手工输入）</label>
-        <input id="vocabCategory" class="input" list="categoryOptions"
-               placeholder="例如：第一单元 / 期末复习 / 易错字" autocomplete="off">
+        <label class="field-label" for="vocabCategory">分类<span class="req">*</span>（下拉选择）</label>
+        <div class="row" style="margin-top:0">
+          <select id="vocabCategory" class="select">
+            <option value="" disabled selected>请选择分类</option>
+          </select>
+          <button id="newVocabCategoryBtn" class="btn ghost">＋ 新建分类</button>
+        </div>
       </div>
       <p class="hint">
         多个生词请用<strong>逗号</strong>分隔（中英文逗号、顿号、分号、换行均可）。<br>
@@ -219,9 +227,13 @@
     <div class="card">
       <h2>古诗词导入</h2>
       <div class="field">
-        <label class="field-label" for="poemCategory">分类<span class="req">*</span>（下拉选择或手工输入）</label>
-        <input id="poemCategory" class="input" list="categoryOptions"
-               placeholder="例如：三年级下册 / 必背古诗 / 唐诗" autocomplete="off">
+        <label class="field-label" for="poemCategory">分类<span class="req">*</span>（下拉选择）</label>
+        <div class="row" style="margin-top:0">
+          <select id="poemCategory" class="select">
+            <option value="" disabled selected>请选择分类</option>
+          </select>
+          <button id="newPoemCategoryBtn" class="btn ghost">＋ 新建分类</button>
+        </div>
       </div>
       <p class="hint">多首古诗词请用 <code>---</code> 分隔；建议第一行写标题，下面写正文。</p>
       <textarea id="poemInput" rows="8" placeholder="静夜思
@@ -337,9 +349,6 @@
   </section>
 </div>
 
-<!-- 分类候选（下拉选择 + 手工输入） -->
-<datalist id="categoryOptions"></datalist>
-
 <script>
 (function () {
   'use strict';
@@ -430,6 +439,28 @@
     localStorage.setItem(POEM_KEY, JSON.stringify(poems));
   }
 
+  /* ================= 分类管理 ================= */
+  const CATEGORY_KEY = 'yw_dictation_categories_v1';
+  let savedCategories = [];   // 用户手动新建的分类（持久化，两个导入下拉框共用）
+
+  function loadCategories() {
+    try {
+      const raw = localStorage.getItem(CATEGORY_KEY);
+      const data = raw ? JSON.parse(raw) : [];
+      savedCategories = Array.isArray(data)
+        ? data.filter(c => typeof c === 'string' && c.trim()).map(c => c.trim())
+        : [];
+    } catch (e) {
+      savedCategories = [];
+    }
+  }
+
+  function saveCategories() {
+    try {
+      localStorage.setItem(CATEGORY_KEY, JSON.stringify(savedCategories));
+    } catch (e) { /* 忽略 */ }
+  }
+
   /* ================= 工具函数 ================= */
   const esc = s => String(s).replace(/[&<>"']/g, c => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
@@ -437,16 +468,25 @@
 
   function setStatus(msg) { statusEl.textContent = msg; }
 
+  // 全部分类 = 手动新建的分类 ∪ 数据中实际存在的分类
   function getCategories() {
     const set = new Set();
+    savedCategories.forEach(c => { if (c) set.add(c); });
     vocab.forEach(v => { if (v.category) set.add(v.category); });
     poems.forEach(p => { if (p.category) set.add(p.category); });
     return Array.from(set);
   }
 
-  // 刷新两个分类下拉框 + datalist 候选
+  // 刷新四个分类下拉框（导入两个 + 筛选两个）
   function refreshCategorySelects() {
     const cats = getCategories();
+
+    [vocabCategory, poemCategory].forEach(sel => {
+      const prev = sel.value;
+      sel.innerHTML = '<option value="" disabled selected>请选择分类</option>' +
+        cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+      sel.value = (prev && cats.indexOf(prev) !== -1) ? prev : '';
+    });
 
     [overviewFilter, dictationFilter].forEach(sel => {
       const prev = sel.value;
@@ -454,10 +494,6 @@
         cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
       sel.value = (prev === 'all' || cats.indexOf(prev) !== -1) ? prev : 'all';
     });
-
-    // 只展示已导入数据中真实存在的分类，不预置任何默认分类
-    $('categoryOptions').innerHTML =
-      cats.map(c => `<option value="${esc(c)}"></option>`).join('');
   }
 
   /**
@@ -650,10 +686,30 @@
   }
 
   /* ================= 导入功能 ================= */
+  /* ---------- 新建分类 ---------- */
+  function promptNewCategory(sel) {
+    const name = prompt('请输入新分类名称：', '');
+    if (name === null) return;                 // 用户取消
+    const n = name.trim();
+    if (!n) { alert('分类名称不能为空'); return; }
+
+    if (!savedCategories.includes(n)) savedCategories.push(n);
+    saveCategories();
+    refreshCategorySelects();
+    sel.value = n;                             // 新建后自动选中
+  }
+
+  $('newVocabCategoryBtn').addEventListener('click', function () {
+    promptNewCategory(vocabCategory);
+  });
+  $('newPoemCategoryBtn').addEventListener('click', function () {
+    promptNewCategory(poemCategory);
+  });
+
   $('importVocabBtn').addEventListener('click', function () {
     const category = vocabCategory.value.trim();
     if (!category) {
-      alert('请先选择或输入分类（必填）。');
+      alert('请先选择分类（必填）。');
       vocabCategory.focus();
       return;
     }
@@ -701,7 +757,7 @@
   $('importPoemBtn').addEventListener('click', function () {
     const category = poemCategory.value.trim();
     if (!category) {
-      alert('请先选择或输入分类（必填）。');
+      alert('请先选择分类（必填）。');
       poemCategory.focus();
       return;
     }
@@ -1194,6 +1250,7 @@
   /* ================= 初始化 ================= */
   function init() {
     loadData();
+    loadCategories();
     refreshAll();
     refreshButtons();
 
