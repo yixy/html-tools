@@ -257,16 +257,20 @@
 
   /* ================= 常量 ================= */
   const LS_KEY = 'travel_footprint_v1';
-  const GEO_BASE = 'https://geo.datav.aliyun.com/areas_v3/bound/';
+  //const GEO_BASE = 'https://geo.datav.aliyun.com/areas_v3/bound/';
+  const GEO_BASE = 'data/geo/';
   const DIRECT = ['北京', '上海', '天津', '重庆', '香港', '澳门'];
   const PALETTE = ['#38bdf8', '#34d399', '#a78bfa', '#fb7185', '#fbbf24', '#22d3ee',
                    '#f472b6', '#4ade80', '#60a5fa', '#f97316', '#c084fc', '#2dd4bf',
                    '#e879f9', '#facc15', '#5eead4', '#93c5fd'];
+/*
   const ECHARTS_SRCS = [
     'https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js',
     'https://unpkg.com/echarts@5.5.0/dist/echarts.min.js',
     'https://cdn.bootcdn.net/ajax/libs/echarts/5.5.0/echarts.min.js'
   ];
+*/
+  const ECHARTS_SRCS = ['libs/echarts.min.js'];
 
   /* ================= 状态 ================= */
   const state = { items: [] };        // [{p, c, d, note}]
@@ -351,7 +355,9 @@
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 25000);
     try {
-      const res = await fetch(url, { signal: ctrl.signal, mode: 'cors' });
+      //const res = await fetch(url, { signal: ctrl.signal, mode: 'cors' });
+      const res = await fetch(url, { signal: ctrl.signal });
+
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return await res.json();
     } finally { clearTimeout(timer); }
