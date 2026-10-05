@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中国古代经典文学作品</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .page { max-width: 1120px; margin: 0 auto; }
+        .nav { margin-bottom: 16px; }
+        .nav a {
+            display: inline-block;
+            background-color: #07c160;
+            color: white;
+            text-decoration: none;
+            padding: 9px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .nav a:hover { background-color: #06ad56; }
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 28px 22px;
+        }
+        h1 { font-size: 26px; text-align: center; margin: 0 0 6px; }
+        .tip { text-align: center; color: #888; font-size: 14px; margin: 0 0 20px; }
+        .table-wrap { overflow-x: auto; }
+        table { border-collapse: collapse; width: 100%; min-width: 960px; }
+        th, td {
+            border: 1px solid #e3e8e6;
+            padding: 10px 12px;
+            font-size: 14px;
+            vertical-align: top;
+            text-align: left;
+            line-height: 1.8;
+        }
+        th { background: #e8f7ef; color: #0a7a45; white-space: nowrap; font-size: 15px; }
+        td:first-child { white-space: nowrap; font-weight: 600; color: #555; }
+        .work-btn {
+            display: inline-block;
+            background: #e8f7ef;
+            color: #0a7a45;
+            border: 1px solid #bfe8d2;
+            padding: 2px 9px;
+            margin: 2px 4px 2px 0;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: inherit;
+            line-height: 1.6;
+            transition: background-color 0.2s;
+        }
+        .work-btn:hover { background: #d6f1e3; }
+        .work-btn.active { background: #07c160; border-color: #07c160; color: white; }
+        .work-btn.active:hover { background: #06ad56; }
+        .work-btn.pending { background: #f5f5f5; border-color: #e0e0e0; color: #888; }
+        .work-btn.pending:hover { background: #ececec; }
+        .tips {
+            margin-top: 24px;
+            background: #f0faf4;
+            border: 1px solid #d6efe2;
+            border-radius: 12px;
+            padding: 18px 22px;
+        }
+        .tips h2 { font-size: 18px; color: #0a7a45; margin: 0 0 12px; }
+        .tips ul { margin: 0; padding-left: 22px; }
+        .tips li { font-size: 14px; line-height: 1.9; margin-bottom: 8px; }
+        .tips li:last-child { margin-bottom: 0; }
+        .tips li li { margin-bottom: 4px; }
+        .footer-note { text-align: center; color: #aaa; font-size: 13px; margin-top: 20px; }
+        #toast {
+            position: fixed;
+            left: 50%;
+            bottom: 40px;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(0,0,0,0.75);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s, transform 0.25s;
+            z-index: 99;
+            max-width: 80vw;
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="nav">
+            <a href="/html-tools/index.html">← 返回首页</a>
+        </div>
+        <div class="card">
+            <h1>📖 中国古代经典文学作品</h1>
+            <p class="tip">点击作品名称按钮进入详情页（目前仅开放《山海经》，其余页面陆续补充）</p>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>年代</th>
+                            <th>代表作品</th>
+                            <th>作者</th>
+                            <th>特点</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>先秦古籍</td>
+                            <td><a href="pages/literature/山海经.html" class="work-btn active">《山海经》</a></td>
+                            <td>不详</td>
+                            <td><strong>上古奇书，神怪之祖</strong>：开创了后世神话、寓言、童话、故事、诗歌之先河。</td>
+                        </tr>
+                        <tr>
+                            <td>西周、春秋</td>
+                            <td><button class="work-btn pending" data-name="诗经" onclick="showComing(this)">《诗经》</button></td>
+                            <td>周朝采诗官采集，后由孔子修订传世</td>
+                            <td><strong>中国第一部诗歌总集</strong>：周采诗官采集民间歌谣、正声雅乐、宗庙祭祀乐歌，后由孔子修订而成。分为《风》《雅》《颂》三个部分；有赋、比、兴三种写作方法。</td>
+                        </tr>
+                        <tr>
+                            <td>春秋、战国</td>
+                            <td><button class="work-btn pending" data-name="论语" onclick="showComing(this)">《论语》</button><button class="work-btn pending" data-name="孟子" onclick="showComing(this)">《孟子》</button></td>
+                            <td>孔子弟子及其再传弟子；孟子弟子及其再传弟子</td>
+                            <td><strong>儒家</strong>：论语记录孔子及其弟子言行。孟子记录孟子及其弟子言行。</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="3">战国</td>
+                            <td><button class="work-btn pending" data-name="庄子" onclick="showComing(this)">《庄子》</button></td>
+                            <td>庄子</td>
+                            <td><strong>道家</strong>：庄周是道家学派集大成者，与老子合称“老庄”。</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>屈原</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td>先秦散文</td>
+                        </tr>
+                        <tr>
+                            <td>西汉</td>
+                            <td><button class="work-btn pending" data-name="史记" onclick="showComing(this)">《史记》</button></td>
+                            <td>司马迁</td>
+                            <td><strong>中国第一部纪传体通史</strong>：包含本纪、表、书、世家、列传。</td>
+                        </tr>
+                        <tr>
+                            <td>东汉末</td>
+                            <td><button class="work-btn pending" data-name="龟虽寿" onclick="showComing(this)">《龟虽寿》</button><button class="work-btn pending" data-name="观沧海" onclick="showComing(this)">《观沧海》</button>等</td>
+                            <td>曹操等</td>
+                            <td><strong>建安文学</strong>：雄健深沉，慷慨悲凉的艺术风格，代表人物有“三曹”和“建安七子”。</td>
+                        </tr>
+                        <tr>
+                            <td>东晋</td>
+                            <td><button class="work-btn pending" data-name="桃花源记" onclick="showComing(this)">《桃花源记》</button><button class="work-btn pending" data-name="归园田居" onclick="showComing(this)">《归园田居》</button><button class="work-btn pending" data-name="五柳先生传" onclick="showComing(this)">《五柳先生传》</button>等</td>
+                            <td>陶渊明</td>
+                            <td><strong>中国第一位田园诗人</strong>：热爱自然、回归自然，淡薄名利，不为五斗米折腰。</td>
+                        </tr>
+                        <tr>
+                            <td>初唐</td>
+                            <td><button class="work-btn pending" data-name="滕王阁序" onclick="showComing(this)">《滕王阁序》</button><button class="work-btn pending" data-name="送杜少府之任蜀州" onclick="showComing(this)">《送杜少府之任蜀州》</button><button class="work-btn pending" data-name="登幽州台歌" onclick="showComing(this)">《登幽州台歌》</button><button class="work-btn pending" data-name="春江花月夜" onclick="showComing(this)">《春江花月夜》</button>等</td>
+                            <td>初唐四杰（王勃、杨炯、卢照邻、骆宾王）、陈子昂、张若虚</td>
+                            <td><strong>初唐诗歌</strong>：刚健而飞动的抒情风格。</td>
+                        </tr>
+                        <tr>
+                            <td>盛唐</td>
+                            <td>边塞诗<button class="work-btn pending" data-name="凉州词" onclick="showComing(this)">《凉州词》</button><button class="work-btn pending" data-name="出塞" onclick="showComing(this)">《出塞》</button>等；山水田园诗<button class="work-btn pending" data-name="过故人庄" onclick="showComing(this)">《过故人庄》</button><button class="work-btn pending" data-name="山居秋暝" onclick="showComing(this)">《山居秋暝》</button>等</td>
+                            <td>边塞诗人：高适、王昌龄、岑参；山水田园诗人：王维、孟浩然。</td>
+                            <td><strong>边塞诗</strong>：反映边疆地区军民生活和边塞自然风光，寄托思念家乡、报效国家、建功立业等情感。<strong>山水田园诗</strong>：一切景语皆情语，借景抒情，通过描写田园牧歌式生活，借以表达对现实的不满，对宁静平和生活的向往。</td>
+                        </tr>
+                        <tr>
+                            <td>盛唐</td>
+                            <td><button class="work-btn pending" data-name="望庐山瀑布" onclick="showComing(this)">《望庐山瀑布》</button><button class="work-btn pending" data-name="蜀道难" onclick="showComing(this)">《蜀道难》</button><button class="work-btn pending" data-name="将进酒" onclick="showComing(this)">《将进酒》</button></td>
+                            <td>李白</td>
+                            <td><strong>诗仙</strong>：<strong>豪放飘逸·浪漫主义</strong>。1. 想象奇绝：善用夸张、神话，如“飞流直下三千尺”；2. 语言奔放：情感喷薄而出，不拘格律；3. 主题超脱：追求自由，向往山水仙道。</td>
+                        </tr>
+                        <tr>
+                            <td>盛唐、中唐</td>
+                            <td><button class="work-btn pending" data-name="三吏" onclick="showComing(this)">《三吏》</button><button class="work-btn pending" data-name="三别" onclick="showComing(this)">《三别》</button><button class="work-btn pending" data-name="春望" onclick="showComing(this)">《春望》</button><button class="work-btn pending" data-name="登高" onclick="showComing(this)">《登高》</button></td>
+                            <td>杜甫</td>
+                            <td><strong>诗圣</strong>：<strong>沉郁顿挫·现实主义</strong>。1. 针砭时弊：直面社会苦难，如“朱门酒肉臭，路有冻死骨”；2. 格律精严：工于炼字，律诗成就极高；3. 情感深沉：凝聚家国之痛与人生悲悯。</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="3">中唐</td>
+                            <td><button class="work-btn pending" data-name="师说" onclick="showComing(this)">《师说》</button><button class="work-btn pending" data-name="小石潭记" onclick="showComing(this)">《小石潭记》</button>等古文</td>
+                            <td>韩愈、柳宗元</td>
+                            <td><strong>古文运动</strong>：反对六朝以来浮华的骈文，主张恢复先秦两汉的散文传统，文以载道</td>
+                        </tr>
+                        <tr>
+                            <td><button class="work-btn pending" data-name="卖炭翁" onclick="showComing(this)">《卖炭翁》</button><button class="work-btn pending" data-name="琵琶行" onclick="showComing(this)">《琵琶行》</button>等诗歌</td>
+                            <td>韩愈、孟郊、白居易、元稹、刘禹锡、柳宗元、李贺</td>
+                            <td><strong>新乐府运动</strong>：由 白居易、元稹 等人倡导的诗歌革新运动，主张用新题写时事的乐府诗，取代已僵化的旧题乐府。“文章合为时而著，歌诗合为事而作。”（文章应该为时代而写，诗歌应该为现实而作）。<strong>花间词派</strong>：温庭筠更重要的贡献在词作方面，他是花间词派的首要词人，甚至被尊为“花间鼻祖”。</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>温庭筠</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>晚唐</td>
+                            <td><button class="work-btn pending" data-name="琴瑟" onclick="showComing(this)">《琴瑟》</button><button class="work-btn pending" data-name="泊秦淮" onclick="showComing(this)">《泊秦淮》</button>等</td>
+                            <td>李商隐、杜牧</td>
+                            <td>抑郁悲凉</td>
+                        </tr>
+                        <tr>
+                            <td>五代十国</td>
+                            <td><button class="work-btn pending" data-name="相见欢" onclick="showComing(this)">《相见欢》</button><button class="work-btn pending" data-name="虞美人" onclick="showComing(this)">《虞美人》</button><button class="work-btn pending" data-name="水调歌头" onclick="showComing(this)">《水调歌头》</button></td>
+                            <td>李煜</td>
+                            <td>南唐后主，婉约词人，词中帝，亡国君。</td>
+                        </tr>
+                        <tr>
+                            <td>宋朝</td>
+                            <td>《</td>
+                            <td>婉约派：柳永、李清照、姜夔、晏殊。豪放派：苏轼、辛弃疾。</td>
+                            <td>宋词：婉约派：豪放派：</td>
+                        </tr>
+                        <tr>
+                            <td>元朝</td>
+                            <td><button class="work-btn pending" data-name="窦娥冤" onclick="showComing(this)">《窦娥冤》</button><button class="work-btn pending" data-name="牡丹亭" onclick="showComing(this)">《牡丹亭》</button></td>
+                            <td>关汉卿、汤显祖</td>
+                            <td>元曲</td>
+                        </tr>
+                        <tr>
+                            <td>明朝、清朝</td>
+                            <td><button class="work-btn pending" data-name="三国演义" onclick="showComing(this)">《三国演义》</button><button class="work-btn pending" data-name="水浒传" onclick="showComing(this)">《水浒传》</button><button class="work-btn pending" data-name="西游记" onclick="showComing(this)">《西游记》</button><button class="work-btn pending" data-name="金瓶梅" onclick="showComing(this)">《金瓶梅》</button><button class="work-btn pending" data-name="红楼梦" onclick="showComing(this)">《红楼梦》</button></td>
+                            <td>元末明初：罗贯中、施耐庵；明：吴承恩；清：曹雪芹</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>清朝</td>
+                            <td><button class="work-btn pending" data-name="儒林外史" onclick="showComing(this)">《儒林外史》</button><button class="work-btn pending" data-name="聊斋志异" onclick="showComing(this)">《聊斋志异》</button></td>
+                            <td>吴敬梓、蒲松龄</td>
+                            <td><strong>讽刺小说</strong>：用嘲讽的表现手法揭露生活中消极落后和腐朽反动的事物。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="tips">
+                <h2>📝 文言文小贴士</h2>
+                <ul>
+                    <li><strong>文言文特点是文字简洁</strong>：竹简重、丝绸贵。突出重点，省略废话。
+                        <ul>
+                            <li>文言文可以看成是白话文画了妆，修饰了一下：吃了祝馀就不饥饿 → 祝馀，食之不饥</li>
+                        </ul>
+                    </li>
+                    <li><strong>文言文中的通假字</strong>：用读音或字形相同或相近的字代替本字。如：有黄马，虎文（纹），一目而一首。灼灼其华（花）。</li>
+                    <li><strong>文言文中的代词</strong>：指代别的人或物。如：其、之、是、焉（在那里）。
+                        <ul>
+                            <li>之：1）作为代词，指代前文提到的事物。2）此外，之还可以作为“的”，后跟名词；3）之还可以作为无实义助词，如“疑人之所疑”。</li>
+                        </ul>
+                    </li>
+                    <li><strong>四书五经</strong>：四书之名始于宋朝，《大学》《中庸》《论语》《孟子》。五经之名始于汉武帝，《诗经》《尚书》《礼记》《周易》《春秋》。</li>
+                    <li><strong>二十四史</strong>：前四部正史为：司马迁《史记》，班固《汉书》，范晔《后汉书》，陈寿《三国志》。</li>
+                    <li><strong>唐宋八大家</strong>：“唐宋八大家”是中国文学史上一个非常重要的概念，特指在唐宋两代散文创作中成就最高、影响最大的八位文学家：韩愈、柳宗元、欧阳修、王安石；曾巩、苏洵、苏轼、苏辙。</li>
+                </ul>
+            </div>
+            <p class="footer-note">更多作品页面陆续补充中……</p>
+        </div>
+    </div>
+    <script>
+        var toastTimer;
+        function showComing(btn) {
+            showToast('「' + btn.getAttribute('data-name') + '」详情页敬请期待，后续补充');
+        }
+        function showToast(msg) {
+            var t = document.getElementById('toast');
+            if (!t) {
+                t = document.createElement('div');
+                t.id = 'toast';
+                document.body.appendChild(t);
+            }
+            t.textContent = msg;
+            t.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2200);
+        }
+    </script>
+</body>
+</html>
