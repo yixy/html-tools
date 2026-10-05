@@ -1,0 +1,2434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>学习路线图</title>
+  <style>
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --color-bg: #f5f5f5;
+  --color-surface: #ffffff;
+  --color-border: #e0e0e0;
+  --color-text: #333333;
+  --color-text-secondary: #666666;
+  --color-primary: #4a90d9;
+  --color-success: #52c41a;
+  --color-warning: #faad14;
+  --color-danger: #ff4d4f;
+  --color-locked: #d9d9d9;
+  --sidebar-width: 220px;
+  --card-width: 180px;
+  --card-height: 90px;
+  --radius: 8px;
+  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+#app {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Layout ──────────────────────────────── */
+#sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+#main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* ── Sidebar ─────────────────────────────── */
+.sidebar-header {
+  padding: 16px 16px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sidebar-list {
+  list-style: none;
+  padding: 0 8px;
+}
+
+.sidebar-item {
+  margin-bottom: 2px;
+}
+
+.sidebar-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--color-text);
+  transition: background 0.15s;
+}
+
+.sidebar-btn:hover {
+  background: #f0f0f0;
+}
+
+.sidebar-item.active .sidebar-btn {
+  background: #e8f0fe;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.sidebar-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.sidebar-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-rename-input {
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid var(--color-primary);
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+}
+
+.sidebar-add-btn {
+  margin: 8px;
+  padding: 8px 12px;
+  border: 1px dashed var(--color-border);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  transition: all 0.15s;
+}
+
+.sidebar-add-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ── Sidebar Data Section ─────────────────── */
+.sidebar-data-section {
+  margin: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.sidebar-data-label {
+  padding: 4px 4px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sidebar-data-btn {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--color-text);
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.sidebar-data-btn:hover {
+  background: #f0f0f0;
+}
+
+/* ── Stage Card ───────────────────────────── */
+.stage-card {
+  position: relative;
+  width: var(--card-width);
+  min-height: var(--card-height);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 12px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, opacity 0.2s;
+  flex-shrink: 0;
+}
+
+.stage-card:hover {
+  box-shadow: var(--shadow);
+}
+
+.stage-card--locked {
+  /* lock icon visible but no visual dimming */
+}
+
+.stage-card--dimmed {
+  opacity: 0.25;
+}
+
+.stage-card-lock {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  font-size: 14px;
+}
+
+.stage-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  padding-right: 20px;
+  line-height: 1.3;
+}
+
+.stage-card-status {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin-bottom: 6px;
+}
+
+.stage-card-bar-wrap {
+  height: 4px;
+  background: #eee;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.stage-card-bar {
+  height: 100%;
+  background: var(--color-warning);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+.stage-card-bar--active {
+  background: var(--color-primary);
+}
+
+.stage-card-bar--done {
+  background: var(--color-success);
+}
+
+.stage-card-pct {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+  text-align: right;
+}
+
+/* ── Roadmap ──────────────────────────────── */
+.roadmap-header {
+  margin-bottom: 16px;
+}
+
+.roadmap-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.roadmap-area {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.roadmap-group {
+  margin-bottom: 20px;
+}
+
+.roadmap-group-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  padding-left: 4px;
+}
+
+.roadmap-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+
+.roadmap-toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 16px 0;
+  border-top: 1px solid var(--color-border);
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.toolbar-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--color-text);
+  transition: all 0.15s;
+}
+
+.toolbar-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--color-text-secondary);
+}
+
+.empty-state p {
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+/* ── Filter Bar ───────────────────────────── */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-bar-label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-right: 4px;
+}
+
+.filter-bar-sep {
+  color: var(--color-border);
+  margin: 0 4px;
+  font-size: 14px;
+}
+
+.filter-chip {
+  padding: 4px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  transition: all 0.15s;
+}
+
+.filter-chip:hover {
+  border-color: var(--color-primary);
+}
+
+.filter-chip--active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.filter-chip--clear {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+  background: transparent;
+}
+
+.filter-chip--clear:hover {
+  background: var(--color-danger);
+  color: #fff;
+}
+
+/* ── Modal ────────────────────────────────── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-box {
+  background: var(--color-surface);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 540px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  background: #f0f0f0;
+}
+
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ── Stage Modal ──────────────────────────── */
+.sm-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.sm-label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  min-width: 60px;
+}
+
+.sm-select {
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-size: 13px;
+  background: var(--color-surface);
+}
+
+.sm-progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.sm-progress-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.sm-pct-text {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.sm-section {
+  margin-bottom: 16px;
+}
+
+.sm-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 8px;
+}
+
+.sm-items-list {
+  list-style: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.sm-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.sm-item:last-child {
+  border-bottom: none;
+}
+
+.sm-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.sm-item span {
+  flex: 1;
+  font-size: 13px;
+}
+
+.sm-item-del {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  display: none;
+}
+
+.sm-item:hover .sm-item-del {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sm-item-del:hover {
+  background: #fee;
+  color: var(--color-danger);
+}
+
+.sm-item--add input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  padding: 4px 0;
+}
+
+.sm-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.sm-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: #e8f0fe;
+  color: var(--color-primary);
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.sm-tag-remove {
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sm-tag-remove:hover {
+  background: rgba(0,0,0,0.1);
+}
+
+.sm-tag-add {
+  font-size: 12px;
+  padding: 3px 8px;
+}
+
+.sm-deps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.sm-dep-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: #f5f5f5;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.sm-dep-empty {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.sm-dep-picker-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.sm-dep-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.sm-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.sm-btn {
+  padding: 8px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.sm-btn--primary {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.sm-btn--primary:hover {
+  opacity: 0.9;
+}
+
+.sm-btn--danger {
+  background: transparent;
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.sm-btn--danger:hover {
+  background: var(--color-danger);
+  color: #fff;
+}
+
+.sm-btn--small {
+  padding: 3px 10px;
+  font-size: 12px;
+  background: transparent;
+}
+
+.sm-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ── Group & Tag Management ───────────────── */
+.sm-groups-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sm-group-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sm-tab-row {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  border-bottom: 2px solid var(--color-border);
+}
+
+.sm-tab {
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.15s;
+}
+
+.sm-tab:hover {
+  color: var(--color-text);
+}
+
+.sm-tab.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* ── Icon Picker ──────────────────────────── */
+.icon-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.icon-btn:hover {
+  border-color: var(--color-primary);
+}
+
+.icon-btn--active {
+  border-color: var(--color-primary);
+  background: #e8f0fe;
+  box-shadow: 0 0 0 2px rgba(74,144,217,0.2);
+}
+
+/* ── Welcome ──────────────────────────────── */
+.welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.welcome h2 {
+  font-size: 24px;
+  margin-bottom: 12px;
+  color: var(--color-text);
+}
+
+.welcome p {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+}
+
+/* Combobox */
+.sm-combobox {
+  position: relative;
+  flex: 1;
+}
+.sm-combobox input {
+  width: 100%;
+  box-sizing: border-box;
+}
+.sm-combobox-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 160px;
+  overflow-y: auto;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  z-index: 10;
+}
+.sm-combobox-item {
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.sm-combobox-item:hover {
+  background: var(--color-bg-hover, #e8f0fe);
+}
+.sm-combobox-new {
+  color: var(--color-text-secondary);
+  border-top: 1px solid var(--color-border);
+  font-style: italic;
+}
+
+/* ── 返回工具箱链接 ── */
+.tool-nav {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  z-index: 1000;
+  background-color: #07c160;
+  color: #ffffff;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: background-color 0.3s;
+}
+.tool-nav:hover { background-color: #06ad56; }
+#main-content { padding-top: 52px; }
+  </style>
+</head>
+<body>
+  <a class="tool-nav" href="index.html">← 返回工具箱</a>
+  <div id="app"></div>
+  <script id="core-script">
+const STORAGE_KEY = 'learning-roadmap-data';
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (data && Array.isArray(data.categories)) {
+        return data;
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to parse stored data, falling back to presets.');
+  }
+    return { categories: [] };
+}
+
+function saveData(data) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.warn('Failed to save data to localStorage:', e);
+  }
+}
+
+/** @param {string} id */
+function getCategory(data, id) {
+  return data.categories.find(c => c.id === id);
+}
+
+let _idCounter = Date.now();
+function generateId(prefix = '') {
+  return `${prefix}${(_idCounter++).toString(36)}`;
+}
+
+function addCategory(data, name, icon) {
+  const id = generateId('cat-');
+  const category = {
+    id,
+    name,
+    icon,
+    groups: [],
+    stages: [],
+    contentTags: [],
+    stageTags: [],
+  };
+  data.categories.push(category);
+  saveData(data);
+  return category;
+}
+
+function updateCategory(data, id, updates) {
+  const cat = data.categories.find(c => c.id === id);
+  if (!cat) return;
+  const { id: _id, ...safeUpdates } = updates;  // prevent id overwrite
+  Object.assign(cat, safeUpdates);
+  saveData(data);
+}
+
+function deleteCategory(data, id) {
+  data.categories = data.categories.filter(c => c.id !== id);
+  saveData(data);
+}
+
+function addStage(data, categoryId, stage) {
+  const cat = data.categories.find(c => c.id === categoryId);
+  if (!cat) return;
+  // Sync percentage from items
+  syncPercentage(stage);
+  cat.stages.push(stage);
+  // Add stage to group's stageIds if group exists
+  if (stage.groupId) {
+    const group = cat.groups.find(g => g.id === stage.groupId);
+    if (group && !group.stageIds.includes(stage.id)) group.stageIds.push(stage.id);
+  }
+  saveData(data);
+}
+
+function updateStage(data, categoryId, stageId, updates) {
+  const cat = data.categories.find(c => c.id === categoryId);
+  if (!cat) return;
+  const stage = cat.stages.find(s => s.id === stageId);
+  if (!stage) return;
+  Object.assign(stage, updates);
+  syncPercentage(stage);
+  saveData(data);
+}
+
+function deleteStage(data, categoryId, stageId) {
+  const cat = data.categories.find(c => c.id === categoryId);
+  if (!cat) return;
+  // Clean up references
+  cat.stages.forEach(s => {
+    if (s.prerequisites) s.prerequisites = s.prerequisites.filter(id => id !== stageId);
+    if (s.softPrerequisites) s.softPrerequisites = s.softPrerequisites.filter(id => id !== stageId);
+  });
+  cat.groups.forEach(g => {
+    g.stageIds = g.stageIds.filter(id => id !== stageId);
+  });
+  cat.stages = cat.stages.filter(s => s.id !== stageId);
+  saveData(data);
+}
+
+function syncPercentage(stage) {
+  const total = stage.items.length;
+  if (total === 0) {
+    stage.percentage = 0;
+    return;
+  }
+  const done = stage.items.filter(i => i.done).length;
+  stage.percentage = Math.round((done / total) * 100);
+}
+
+function syncStatusFromItems(stage) {
+  syncPercentage(stage);
+  if (stage.percentage === 100) {
+    stage.status = 'completed';
+  } else if (stage.percentage > 0) {
+    stage.status = 'in-progress';
+  } else {
+    stage.status = 'not-started';
+  }
+}
+
+function syncStatusChange(stage, newStatus) {
+  if (newStatus === 'completed') {
+    stage.items.forEach(i => (i.done = true));
+    stage.percentage = 100;
+  } else if (newStatus === 'not-started') {
+    stage.items.forEach(i => (i.done = false));
+    stage.percentage = 0;
+  } else if (newStatus === 'in-progress' && stage.percentage === 0) {
+    stage.percentage = 1;
+  }
+  stage.status = newStatus;
+}
+
+/** Detect if adding newPrereqs to stageId creates a cycle */
+function detectCycle(category, stageId, newPrereqs) {
+  const visited = new Set();
+  const stack = [...newPrereqs];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (current === stageId) return true;
+    if (visited.has(current)) continue;
+    visited.add(current);
+    const stage = category.stages.find(s => s.id === current);
+    if (stage) {
+      stack.push(...stage.prerequisites);
+    }
+  }
+  return false;
+}
+
+/** Check if a stage name is duplicate within a category.
+ *  Pass skipId to exclude the stage being edited from the check. */
+function isStageNameDuplicate(data, categoryId, name, skipId = null) {
+  const cat = data.categories.find(c => c.id === categoryId);
+  if (!cat) return false;
+  return cat.stages.some(s => s.name === name && s.id !== skipId);
+}
+
+
+
+let _onRoute = null;
+let _current = null;
+
+function initRouter(onRoute) {
+  _onRoute = onRoute;
+  window.addEventListener('hashchange', _handleChange);
+  _handleChange();
+}
+
+function _handleChange() {
+  const hash = window.location.hash.slice(1); // remove '#'
+  const categoryId = hash.split('/')[1] || null;
+  _current = categoryId;
+  if (_onRoute) _onRoute(categoryId);
+}
+
+function navigate(categoryId) {
+  window.location.hash = `#/${categoryId}`;
+}
+
+function getCurrentRoute() {
+  return _current;
+}
+
+
+const ICONS = [
+  '📐', '📖', '⚛️', '📚', '🏛️', '🎭',
+  '💻', '🧬', '🌍', '🎵', '🧠', '⚽',
+  '🔬', '📊', '🗺️', '🎨', '💼', '🏗️',
+  '🔧', '🌟',
+];
+
+  </script>
+  <script id="app-script">
+
+function openModal(title, contentFn, onClose) {
+  // Backdrop
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+
+  // Modal box
+  const box = document.createElement('div');
+  box.className = 'modal-box';
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'modal-header';
+  const titleEl = document.createElement('h3');
+  titleEl.className = 'modal-title';
+  titleEl.textContent = title;
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'modal-close';
+  closeBtn.innerHTML = '&times;';
+  closeBtn.addEventListener('click', close);
+  header.appendChild(titleEl);
+  header.appendChild(closeBtn);
+
+  // Body
+  const body = document.createElement('div');
+  body.className = 'modal-body';
+
+  box.appendChild(header);
+  box.appendChild(body);
+  backdrop.appendChild(box);
+  document.body.appendChild(backdrop);
+
+  // Render content into body
+  if (contentFn) {
+    contentFn(body);
+  }
+
+  // Close on backdrop click
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) close();
+  });
+
+  // Close on Escape
+  function onKey(e) {
+    if (e.key === 'Escape') close();
+  }
+  document.addEventListener('keydown', onKey);
+
+  function close() {
+    document.removeEventListener('keydown', onKey);
+    backdrop.remove();
+    if (onClose) onClose();
+  }
+
+  return {
+    close,
+    setTitle: (t) => { titleEl.textContent = t; },
+    setContent: (fn) => {
+      body.innerHTML = '';
+      fn(body);
+    },
+  };
+}
+
+
+
+/**
+ * Creates a group combobox (text input + filtered dropdown).
+
+ * @param {string} [initialGroupId] - optional, selects the matching group on init
+ * @returns {{ el: HTMLElement, getValue: () => string, setValue: (name: string) => void }}
+ */
+function createGroupCombobox(category, initialGroupId) {
+  const container = document.createElement('div');
+  container.className = 'sm-combobox';
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'sm-select';
+  input.placeholder = '选择或输入分组名称';
+
+  // Set initial value from existing group
+  if (initialGroupId) {
+    const grp = category.groups.find(g => g.id === initialGroupId);
+    if (grp) input.value = grp.name;
+  }
+
+  const dropdown = document.createElement('div');
+  dropdown.className = 'sm-combobox-dropdown';
+  container.appendChild(input);
+  container.appendChild(dropdown);
+
+  function renderDropdown(filterText) {
+    dropdown.innerHTML = '';
+    const term = (filterText || '').toLowerCase();
+    const filtered = category.groups.filter(g =>
+      !term || g.name.toLowerCase().includes(term)
+    );
+
+    filtered.forEach(g => {
+      const item = document.createElement('div');
+      item.className = 'sm-combobox-item';
+      item.textContent = g.name;
+      item.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        input.value = g.name;
+        dropdown.style.display = 'none';
+      });
+      dropdown.appendChild(item);
+    });
+
+    // If typed text doesn't exactly match any existing group
+    if (filterText && !category.groups.some(g => g.name === filterText)) {
+      const hint = document.createElement('div');
+      hint.className = 'sm-combobox-item sm-combobox-new';
+      hint.textContent = `+ 新建分组 "${filterText}"`;
+      hint.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        input.value = filterText;
+        dropdown.style.display = 'none';
+      });
+      dropdown.appendChild(hint);
+    }
+
+    dropdown.style.display = 'block';
+  }
+
+  input.addEventListener('focus', () => renderDropdown(input.value));
+  input.addEventListener('input', () => renderDropdown(input.value));
+  input.addEventListener('blur', () => {
+    setTimeout(() => { dropdown.style.display = 'none'; }, 150);
+  });
+
+  return {
+    el: container,
+    getValue: () => input.value.trim(),
+    setValue: (name) => { input.value = name; },
+  };
+}
+
+/**
+ * Resolve a group name to a group id. Creates the group if it doesn't exist.
+ * Returns the group id (or empty string if name is blank).
+ */
+function resolveGroupId(category, groupName, generateId, saveFn) {
+  const name = groupName.trim();
+  if (!name) return '';
+
+  let group = category.groups.find(g => g.name === name);
+  if (!group) {
+    group = { id: generateId('grp-'), name, stageIds: [] };
+    category.groups.push(group);
+    if (typeof saveFn === 'function') saveFn();
+  }
+  return group.id;
+}
+
+
+
+function renderFilterBar(container, category, activeContentTags, activeStageTags, setActiveTags) {
+  // Remove existing filter bar if any
+  const existing = container.querySelector('.filter-bar');
+  if (existing) existing.remove();
+
+  if (!category || (category.contentTags.length === 0 && category.stageTags.length === 0)) {
+    return;
+  }
+
+  const bar = document.createElement('div');
+  bar.className = 'filter-bar';
+
+  const label = document.createElement('span');
+  label.className = 'filter-bar-label';
+  label.textContent = '筛选：';
+  bar.appendChild(label);
+
+  // Content tags
+  for (const tag of category.contentTags) {
+    const chip = _createChip(tag, 'content', activeContentTags, activeStageTags, setActiveTags);
+    bar.appendChild(chip);
+  }
+
+  // Separator
+  if (category.contentTags.length > 0 && category.stageTags.length > 0) {
+    const sep = document.createElement('span');
+    sep.className = 'filter-bar-sep';
+    sep.textContent = '|';
+    bar.appendChild(sep);
+  }
+
+  // Stage tags
+  for (const tag of category.stageTags) {
+    const chip = _createChip(tag, 'stage', activeContentTags, activeStageTags, setActiveTags);
+    bar.appendChild(chip);
+  }
+
+  // Clear all button
+  const hasActive = activeContentTags.size > 0 || activeStageTags.size > 0;
+  if (hasActive) {
+    const clear = document.createElement('button');
+    clear.className = 'filter-chip filter-chip--clear';
+    clear.textContent = '✕ 全部';
+    clear.addEventListener('click', () => setActiveTags([], []));
+    bar.appendChild(clear);
+  }
+
+  container.appendChild(bar);
+}
+
+function _createChip(tag, type, activeContentTags, activeStageTags, setActiveTags) {
+  const activeSet = type === 'content' ? activeContentTags : activeStageTags;
+  const isActive = activeSet.has(tag.id);
+
+  const chip = document.createElement('button');
+  chip.className = 'filter-chip';
+  if (isActive) chip.classList.add('filter-chip--active');
+  chip.textContent = tag.name;
+  chip.addEventListener('click', () => {
+    const newContent = new Set(activeContentTags);
+    const newStage = new Set(activeStageTags);
+    const targetSet = type === 'content' ? newContent : newStage;
+    if (targetSet.has(tag.id)) {
+      targetSet.delete(tag.id);
+    } else {
+      targetSet.add(tag.id);
+    }
+    setActiveTags(newContent, newStage);
+  });
+  return chip;
+}
+
+
+
+const STATUS_ICONS = {
+  'completed': '✅',
+  'in-progress': '🔄',
+  'not-started': '⬜',
+};
+
+const STATUS_LABELS = {
+  'completed': '已完成',
+  'in-progress': '进行中',
+  'not-started': '未开始',
+};
+
+function createStageCard(stage, isLocked, isDimmed, onClick) {
+  const card = document.createElement('div');
+  card.className = 'stage-card';
+  card.dataset.stageId = stage.id;
+  if (isLocked) card.classList.add('stage-card--locked');
+  if (isDimmed) card.classList.add('stage-card--dimmed');
+
+  // Lock overlay
+  if (isLocked) {
+    const lock = document.createElement('div');
+    lock.className = 'stage-card-lock';
+    lock.textContent = '🔒';
+    card.appendChild(lock);
+  }
+
+  // Name
+  const name = document.createElement('div');
+  name.className = 'stage-card-name';
+  name.textContent = stage.name;
+  card.appendChild(name);
+
+  // Status icon + label
+  const status = document.createElement('div');
+  status.className = 'stage-card-status';
+  status.textContent = `${STATUS_ICONS[stage.status]} ${STATUS_LABELS[stage.status]}`;
+  card.appendChild(status);
+
+  // Progress bar
+  const barWrap = document.createElement('div');
+  barWrap.className = 'stage-card-bar-wrap';
+  const bar = document.createElement('div');
+  bar.className = 'stage-card-bar';
+  bar.style.width = `${stage.percentage}%`;
+  if (stage.status === 'completed') bar.classList.add('stage-card-bar--done');
+  else if (stage.status === 'in-progress') bar.classList.add('stage-card-bar--active');
+  barWrap.appendChild(bar);
+  card.appendChild(barWrap);
+
+  // Percentage text
+  const pct = document.createElement('div');
+  pct.className = 'stage-card-pct';
+  pct.textContent = `${stage.percentage}%`;
+  card.appendChild(pct);
+
+  card.addEventListener('click', () => {
+    if (onClick) onClick(stage.id);
+  });
+
+  return card;
+}
+
+
+function renderSidebar(container, appData, currentId, callbacks) {
+  container.innerHTML = '';
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'sidebar-header';
+  header.textContent = '学科导航';
+  container.appendChild(header);
+
+  // Category list
+  const list = document.createElement('ul');
+  list.className = 'sidebar-list';
+
+  for (const cat of appData.categories) {
+    const item = document.createElement('li');
+    item.className = 'sidebar-item';
+    if (cat.id === currentId) item.classList.add('active');
+
+    const btn = document.createElement('button');
+    btn.className = 'sidebar-btn';
+    btn.innerHTML = `<span class="sidebar-icon">${cat.icon}</span><span class="sidebar-name">${cat.name}</span>`;
+    btn.addEventListener('click', () => callbacks.onSelect(cat.id));
+
+    // Double-click to rename
+    btn.addEventListener('dblclick', () => {
+      const input = document.createElement('input');
+      input.className = 'sidebar-rename-input';
+      input.value = cat.name;
+      input.addEventListener('blur', () => {
+        if (input.value.trim() && input.value !== cat.name) {
+          callbacks.onRename(cat.id, input.value.trim());
+        } else {
+          renderSidebar(container, appData, currentId, callbacks);
+        }
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') input.blur();
+        if (e.key === 'Escape') {
+          input.value = cat.name;
+          input.blur();
+        }
+      });
+      btn.innerHTML = '';
+      btn.appendChild(input);
+      input.focus();
+      input.select();
+    });
+
+    // Context menu for delete
+    btn.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      if (confirm(`确定要删除「${cat.name}」及其所有数据吗？`)) {
+        callbacks.onDelete(cat.id);
+      }
+    });
+
+    item.appendChild(btn);
+    list.appendChild(item);
+  }
+
+  container.appendChild(list);
+
+  // Add button
+  const addBtn = document.createElement('button');
+  addBtn.className = 'sidebar-add-btn';
+  addBtn.textContent = '+ 添加学科';
+  addBtn.addEventListener('click', () => _showAddCategoryModal(callbacks));
+  container.appendChild(addBtn);
+
+  // 数据管理区域
+  const dataSection = document.createElement('div');
+  dataSection.className = 'sidebar-data-section';
+
+  const dataLabel = document.createElement('div');
+  dataLabel.className = 'sidebar-data-label';
+  dataLabel.textContent = '数据管理';
+  dataSection.appendChild(dataLabel);
+
+  const exportBtn = document.createElement('button');
+  exportBtn.className = 'sidebar-data-btn';
+  exportBtn.textContent = '📥 导出数据';
+  exportBtn.addEventListener('click', callbacks.onExport);
+  dataSection.appendChild(exportBtn);
+
+  const importBtn = document.createElement('button');
+  importBtn.className = 'sidebar-data-btn';
+  importBtn.textContent = '📤 导入数据';
+  importBtn.addEventListener('click', callbacks.onImport);
+  dataSection.appendChild(importBtn);
+
+  container.appendChild(dataSection);
+}
+
+function _showAddCategoryModal(callbacks) {
+    let selectedIcon = '📐';
+    let nameValue = '';
+
+    openModal('添加学科', (body) => {
+      body.innerHTML = '';
+
+      // Name input
+      const nameRow = document.createElement('div');
+      nameRow.className = 'sm-row';
+      nameRow.innerHTML = '<label class="sm-label">名称</label>';
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.className = 'sm-select';
+      nameInput.style.flex = '1';
+      nameInput.placeholder = '输入学科名称';
+      nameInput.addEventListener('input', () => { nameValue = nameInput.value.trim(); });
+      nameRow.appendChild(nameInput);
+      body.appendChild(nameRow);
+
+      // Icon picker
+        const iconRow = document.createElement('div');
+        iconRow.className = 'sm-row';
+        iconRow.innerHTML = '<label class="sm-label">图标</label>';
+        const iconGrid = document.createElement('div');
+        iconGrid.className = 'icon-grid';
+        ICONS.forEach(icon => {
+          const btn = document.createElement('button');
+          btn.className = 'icon-btn';
+          btn.textContent = icon;
+          if (icon === selectedIcon) btn.classList.add('icon-btn--active');
+          btn.addEventListener('click', () => {
+            selectedIcon = icon;
+            iconGrid.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('icon-btn--active'));
+            btn.classList.add('icon-btn--active');
+          });
+          iconGrid.appendChild(btn);
+        });
+        iconRow.appendChild(iconGrid);
+        body.appendChild(iconRow);
+
+      // Action buttons
+      const actions = document.createElement('div');
+      actions.className = 'sm-actions';
+      const confirmBtn = document.createElement('button');
+      confirmBtn.className = 'sm-btn sm-btn--primary';
+      confirmBtn.textContent = '添加';
+      confirmBtn.addEventListener('click', () => {
+        if (nameValue) {
+          callbacks.onAdd(nameValue, selectedIcon);
+          // Find and close the modal
+          document.querySelector('.modal-backdrop')?.remove();
+        }
+      });
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'sm-btn';
+      cancelBtn.textContent = '取消';
+      cancelBtn.addEventListener('click', () => {
+        document.querySelector('.modal-backdrop')?.remove();
+      });
+      actions.appendChild(confirmBtn);
+      actions.appendChild(cancelBtn);
+      body.appendChild(actions);
+    });
+}
+
+
+
+
+/**
+ * Render the roadmap for a given category.
+ */
+function renderRoadmap(container, category, activeContentTags, activeStageTags, callbacks, setActiveTags) {
+  container.innerHTML = '';
+
+  if (!category) {
+    container.innerHTML = `<div class="empty-state">
+      <p>欢迎使用学习路线图</p>
+      <p>从左侧添加你的第一个学科开始吧！</p>
+    </div>`;
+    return;
+  }
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'roadmap-header';
+  header.innerHTML = `<h2>${category.icon} ${category.name} — RoadMap</h2>`;
+  container.appendChild(header);
+
+  // Filter bar
+  renderFilterBar(header, category, activeContentTags, activeStageTags, setActiveTags);
+
+  // Determine which stages are dimmed by filter
+  const hasContentFilter = activeContentTags.size > 0;
+  const hasStageFilter = activeStageTags.size > 0;
+  const isFilterActive = hasContentFilter || hasStageFilter;
+
+  function stageMatchesFilter(stage) {
+    if (!isFilterActive) return true;
+    let match = true;
+    if (hasContentFilter) {
+      match = match && stage.tags.content.some(t => activeContentTags.has(t));
+    }
+    if (hasStageFilter) {
+      match = match && stage.tags.stage.some(t => activeStageTags.has(t));
+    }
+    return match;
+  }
+
+  // Determine which stages are locked (prerequisites not all completed)
+  function isStageLocked(stage) {
+    return stage.prerequisites.some(prereqId => {
+      const prereq = category.stages.find(s => s.id === prereqId);
+      return !prereq || prereq.status !== 'completed';
+    });
+  }
+
+  // Groups and stages
+  const roadmapArea = document.createElement('div');
+  roadmapArea.className = 'roadmap-area';
+
+  // Determine stages order per group
+  const groupsToRender = category.groups.length > 0 ? category.groups : [{ id: '__default', name: '', stageIds: category.stages.map(s => s.id) }];
+
+  for (const group of groupsToRender) {
+    const groupStages = group.stageIds
+      .map(sid => category.stages.find(s => s.id === sid))
+      .filter(Boolean);
+
+    if (groupStages.length === 0) continue;
+
+    const groupBlock = document.createElement('div');
+    groupBlock.className = 'roadmap-group';
+
+    if (group.name) {
+      const groupTitle = document.createElement('div');
+      groupTitle.className = 'roadmap-group-title';
+      groupTitle.textContent = group.name;
+      groupBlock.appendChild(groupTitle);
+    }
+
+    const cardsRow = document.createElement('div');
+    cardsRow.className = 'roadmap-cards';
+
+    for (const stage of groupStages) {
+      const locked = isStageLocked(stage);
+      const dimmed = isFilterActive && !stageMatchesFilter(stage);
+      const card = createStageCard(stage, locked, dimmed, callbacks.onStageClick);
+      cardsRow.appendChild(card);
+    }
+
+    groupBlock.appendChild(cardsRow);
+    roadmapArea.appendChild(groupBlock);
+  }
+
+  container.appendChild(roadmapArea);
+
+  // Empty state for no stages
+  if (category.stages.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.innerHTML = '<p>暂无阶段</p><p>点击下方「添加阶段」开始构建路线图</p>';
+    roadmapArea.appendChild(empty);
+  }
+
+  // Bottom toolbar
+  const toolbar = document.createElement('div');
+  toolbar.className = 'roadmap-toolbar';
+  toolbar.innerHTML = `
+    <button class="toolbar-btn" id="btn-manage-tags">管理标签</button>
+    <button class="toolbar-btn" id="btn-add-stage">+ 添加阶段</button>
+    <button class="toolbar-btn" id="btn-edit-groups">编辑分组</button>
+  `;
+  toolbar.querySelector('#btn-add-stage').addEventListener('click', callbacks.onAddStage);
+  toolbar.querySelector('#btn-edit-groups').addEventListener('click', callbacks.onEditGroups);
+  toolbar.querySelector('#btn-manage-tags').addEventListener('click', callbacks.onManageTags);
+  container.appendChild(toolbar);
+}
+
+
+
+
+
+function openStageModal(category, stage, appData, isLocked, onSave, onDelete) {
+  // Work on a clone so we can cancel without side effects
+  const clone = JSON.parse(JSON.stringify(stage));
+
+  function render(body) {
+    body.innerHTML = '';
+
+    // ── Status ──
+    const statusRow = document.createElement('div');
+    statusRow.className = 'sm-row';
+    statusRow.innerHTML = '<label class="sm-label">状态</label>';
+    const statusSelect = document.createElement('select');
+    statusSelect.className = 'sm-select';
+    ['not-started', 'in-progress', 'completed'].forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s;
+      opt.textContent = { 'not-started': '未开始', 'in-progress': '进行中', 'completed': '已完成' }[s];
+      if (clone.status === s) opt.selected = true;
+      statusSelect.appendChild(opt);
+    });
+    if (isLocked) statusSelect.disabled = true;
+    statusSelect.addEventListener('change', () => {
+      syncStatusChange(clone, statusSelect.value);
+      render(body);
+    });
+    statusRow.appendChild(statusSelect);
+    body.appendChild(statusRow);
+
+    // ── Progress ──
+    const pctRow = document.createElement('div');
+    pctRow.className = 'sm-row';
+    const doneCount = clone.items.filter(i => i.done).length;
+    const totalCount = clone.items.length;
+    pctRow.innerHTML = `<label class="sm-label">进度</label>
+      <div class="sm-progress-bar"><div class="sm-progress-fill" style="width:${clone.percentage}%"></div></div>
+      <span class="sm-pct-text">${clone.percentage}% (${doneCount}/${totalCount})</span>`;
+    body.appendChild(pctRow);
+
+    // ── Item Checklist ──
+    const itemsSection = document.createElement('div');
+    itemsSection.className = 'sm-section';
+    itemsSection.innerHTML = '<h4 class="sm-section-title">学习清单</h4>';
+    const itemsList = document.createElement('ul');
+    itemsList.className = 'sm-items-list';
+
+    clone.items.forEach((item, idx) => {
+      const li = document.createElement('li');
+      li.className = 'sm-item';
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = item.done;
+      if (isLocked) cb.disabled = true;
+      cb.addEventListener('change', () => {
+        clone.items[idx].done = cb.checked;
+        syncStatusFromItems(clone);
+        render(body);
+      });
+
+      const span = document.createElement('span');
+      span.textContent = item.text;
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'sm-item-del';
+      delBtn.textContent = '✕';
+      delBtn.addEventListener('click', () => {
+        clone.items.splice(idx, 1);
+        syncStatusFromItems(clone);
+        render(body);
+      });
+
+      li.appendChild(cb);
+      li.appendChild(span);
+      li.appendChild(delBtn);
+      itemsList.appendChild(li);
+    });
+
+    // Add item input
+    const addItemRow = document.createElement('li');
+    addItemRow.className = 'sm-item sm-item--add';
+    const addInput = document.createElement('input');
+    addInput.type = 'text';
+    addInput.placeholder = '输入条目，逗号分隔可批量添加，按 Enter 确认';
+    addInput.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      const raw = addInput.value.trim();
+      if (!raw) return;
+
+      // Split by both English and Chinese commas, trim, skip empties
+      const texts = raw
+        .split(/[,，]/)
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+
+      if (texts.length === 0) return;
+
+      for (const text of texts) {
+        clone.items.push({ id: generateId('item-'), text, done: false });
+      }
+      syncStatusFromItems(clone);
+      addInput.value = '';
+      render(body);
+    });
+    addItemRow.appendChild(addInput);
+    itemsList.appendChild(addItemRow);
+
+    itemsSection.appendChild(itemsList);
+    body.appendChild(itemsSection);
+
+    // ── Content Tags ──
+    body.appendChild(_renderTagSection('内容标签', 'content', category, clone, render, body));
+
+    // ── Stage Tags ──
+    body.appendChild(_renderTagSection('学段标签', 'stage', category, clone, render, body));
+
+    // ── Hard Dependencies ──
+    body.appendChild(_renderDepSection('硬依赖（必须完成）', 'prerequisites', category, clone, render, body));
+
+    // ── Soft Dependencies ──
+    body.appendChild(_renderDepSection('软依赖（建议先学）', 'softPrerequisites', category, clone, render, body));
+
+    // ── Group ──
+    const groupRow = document.createElement('div');
+    groupRow.className = 'sm-row';
+    groupRow.innerHTML = '<label class="sm-label">所属分组</label>';
+    const combo = createGroupCombobox(category, clone.groupId);
+    groupRow.appendChild(combo.el);
+    body.appendChild(groupRow);
+
+    // ── Actions ──
+    const actions = document.createElement('div');
+    actions.className = 'sm-actions';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'sm-btn sm-btn--primary';
+    saveBtn.textContent = '保存修改';
+    saveBtn.addEventListener('click', () => {
+      // Validate no circular dependencies
+      if (detectCycle(category, clone.id, clone.prerequisites)) {
+        alert('保存失败：检测到循环依赖，请调整前置阶段设置。');
+        return;
+      }
+
+      // Resolve group from combobox value
+      const groupName = combo.getValue();
+      const newGroupId = resolveGroupId(category, groupName, generateId, () => {
+        // save callback — the caller's onSave handles saving appData
+      });
+
+      // Update group stageIds (only when group changes)
+      if (stage.groupId !== newGroupId) {
+        const oldGroup = category.groups.find(g => g.id === stage.groupId);
+        if (oldGroup && oldGroup.stageIds) {
+          oldGroup.stageIds = oldGroup.stageIds.filter(sid => sid !== stage.id);
+        }
+        const newGroup = category.groups.find(g => g.id === newGroupId);
+        if (newGroup && !newGroup.stageIds.includes(clone.id)) {
+          newGroup.stageIds.push(clone.id);
+        }
+      }
+      clone.groupId = newGroupId;
+
+      // Copy clone back to stage
+      Object.assign(stage, clone);
+      syncStatusChange(stage, stage.status);
+      onSave();
+      modal.close();
+    });
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'sm-btn sm-btn--danger';
+    deleteBtn.textContent = '删除阶段';
+    deleteBtn.addEventListener('click', () => {
+      if (confirm(`确定要删除「${stage.name}」吗？此操作不可撤销。`)) {
+        onDelete();
+        modal.close();
+      }
+    });
+
+    actions.appendChild(saveBtn);
+    actions.appendChild(deleteBtn);
+    body.appendChild(actions);
+  }
+
+  const modal = openModal(stage.name, (body) => render(body));
+
+  // ── Inline title editing ──
+  const backdrops = document.querySelectorAll('.modal-backdrop');
+  const backdrop = backdrops[backdrops.length - 1];
+  const titleEl = backdrop.querySelector('.modal-title');
+  titleEl.style.cursor = 'pointer';
+  titleEl.title = '点击编辑名称';
+
+  titleEl.addEventListener('click', () => {
+    if (titleEl.querySelector('input')) return;
+
+    const originalName = clone.name;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'sm-select';
+    input.value = originalName;
+    input.style.cssText = 'font-size:inherit;font-weight:inherit;width:100%;';
+
+    titleEl.textContent = '';
+    titleEl.appendChild(input);
+    input.focus();
+    input.select();
+
+    function confirmEdit() {
+      const newName = input.value.trim();
+      if (!newName) {
+        alert('阶段名称不能为空');
+        titleEl.textContent = originalName;
+        return;
+      }
+      if (newName === originalName) {
+        titleEl.textContent = originalName;
+        return;
+      }
+      if (isStageNameDuplicate(appData, category.id, newName, clone.id)) {
+        alert('该学科下已存在同名阶段');
+        titleEl.textContent = originalName;
+        return;
+      }
+      clone.name = newName;
+      stage.name = newName;
+      saveData(appData);
+      titleEl.textContent = newName;
+    }
+
+    input.addEventListener('blur', confirmEdit);
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        input.blur();
+      } else if (e.key === 'Escape') {
+        e.stopPropagation();
+        input.removeEventListener('blur', confirmEdit);
+        titleEl.textContent = originalName;
+      }
+    });
+  });
+}
+
+function _renderTagSection(label, tagType, category, clone, render, bodyParam) {
+  const section = document.createElement('div');
+  section.className = 'sm-section';
+  section.innerHTML = `<h4 class="sm-section-title">${label}</h4>`;
+
+  const tagContainer = document.createElement('div');
+  tagContainer.className = 'sm-tags';
+
+  const registry = tagType === 'content' ? category.contentTags : category.stageTags;
+  const currentTags = clone.tags[tagType];
+
+  // Show current tags as removable chips
+  for (const tagId of currentTags) {
+    const tagDef = registry.find(t => t.id === tagId);
+    if (!tagDef) continue;
+    const chip = document.createElement('span');
+    chip.className = 'sm-tag-chip';
+    chip.innerHTML = `${tagDef.name} <button class="sm-tag-remove">&times;</button>`;
+    chip.querySelector('button').addEventListener('click', () => {
+      clone.tags[tagType] = clone.tags[tagType].filter(t => t !== tagId);
+      render(bodyParam);
+    });
+    tagContainer.appendChild(chip);
+  }
+
+  // Add tag dropdown (show unused tags)
+  const unusedTags = registry.filter(t => !currentTags.includes(t.id));
+  if (unusedTags.length > 0) {
+    const addSelect = document.createElement('select');
+    addSelect.className = 'sm-select sm-tag-add';
+    const placeholder = document.createElement('option');
+    placeholder.textContent = '添加标签...';
+    placeholder.value = '';
+    placeholder.selected = true;
+    addSelect.appendChild(placeholder);
+    unusedTags.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.name;
+      addSelect.appendChild(opt);
+    });
+    addSelect.addEventListener('change', () => {
+      if (addSelect.value) {
+        clone.tags[tagType].push(addSelect.value);
+        addSelect.value = '';
+        render(bodyParam);
+      }
+    });
+    tagContainer.appendChild(addSelect);
+  }
+
+  section.appendChild(tagContainer);
+  return section;
+}
+
+function _renderDepSection(label, field, category, clone, render, bodyParam) {
+  const section = document.createElement('div');
+  section.className = 'sm-section';
+  section.innerHTML = `<h4 class="sm-section-title">${label}</h4>`;
+
+  const depList = document.createElement('div');
+  depList.className = 'sm-deps';
+
+  const depIds = clone[field];
+
+  if (depIds.length === 0) {
+    depList.innerHTML = '<span class="sm-dep-empty">（无）</span>';
+  } else {
+    depIds.forEach(depId => {
+      const depStage = category.stages.find(s => s.id === depId);
+      const chip = document.createElement('span');
+      chip.className = 'sm-dep-chip';
+      chip.innerHTML = `${depStage ? depStage.name : depId} <button class="sm-tag-remove">&times;</button>`;
+      chip.querySelector('button').addEventListener('click', () => {
+        clone[field] = clone[field].filter(id => id !== depId);
+        render(bodyParam);
+      });
+      depList.appendChild(chip);
+    });
+  }
+
+  // Edit button opens dependency picker
+  const editBtn = document.createElement('button');
+  editBtn.className = 'sm-btn sm-btn--small';
+  editBtn.textContent = '编辑依赖';
+  editBtn.addEventListener('click', () => {
+    _showDepPicker(label, field, category, clone, () => render(bodyParam));
+  });
+  depList.appendChild(editBtn);
+
+  section.appendChild(depList);
+  return section;
+}
+
+function _showDepPicker(label, field, category, clone, onDone) {
+  const modal = openModal(`选择${label}`, (body) => {
+    body.innerHTML = '<p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:12px;">勾选作为依赖的阶段：</p>';
+    const list = document.createElement('div');
+    list.className = 'sm-dep-picker-list';
+
+    category.stages.forEach(s => {
+      if (s.id === clone.id) return; // Can't depend on self
+      const row = document.createElement('label');
+      row.className = 'sm-dep-picker-row';
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = clone[field].includes(s.id);
+      cb.addEventListener('change', () => {
+        if (cb.checked) {
+          if (!clone[field].includes(s.id)) clone[field].push(s.id);
+        } else {
+          clone[field] = clone[field].filter(id => id !== s.id);
+        }
+      });
+
+      const span = document.createElement('span');
+      span.textContent = s.name;
+
+      row.appendChild(cb);
+      row.appendChild(span);
+      list.appendChild(row);
+    });
+
+    body.appendChild(list);
+
+    const doneBtn = document.createElement('button');
+    doneBtn.className = 'sm-btn sm-btn--primary';
+    doneBtn.style.marginTop = '12px';
+    doneBtn.textContent = '确定';
+    doneBtn.addEventListener('click', () => {
+      modal.close();
+      onDone();
+    });
+    body.appendChild(doneBtn);
+  });
+}
+
+
+
+
+
+
+
+
+// 1. Load or initialize data（保持空启动，无铺底预设）
+let appData = loadData();
+
+
+// 2. Build layout
+const app = document.querySelector('#app');
+
+const sidebarEl = document.createElement('aside');
+sidebarEl.id = 'sidebar';
+
+const mainEl = document.createElement('main');
+mainEl.id = 'main-content';
+
+app.appendChild(sidebarEl);
+app.appendChild(mainEl);
+
+// 3. Active tag filter state
+let activeContentTags = new Set();
+let activeStageTags = new Set();
+
+function setActiveTags(content, stage) {
+  activeContentTags = new Set(content);
+  activeStageTags = new Set(stage);
+  render();
+}
+
+// 4. Render function — called on route change or data change
+function render() {
+  const currentId = getCurrentRoute();
+  const currentCategory = currentId
+    ? appData.categories.find(c => c.id === currentId)
+    : appData.categories[0] || null;
+
+  // If no category selected, pick first
+  if (!currentId && appData.categories.length > 0) {
+    navigate(appData.categories[0].id);
+    return;
+  }
+
+  // 全局数据操作回调（导出/导入）
+  const onExport = () => {
+    const json = JSON.stringify(appData, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'roadmap-data.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const onImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.addEventListener('change', () => {
+      const file = input.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const imported = JSON.parse(reader.result);
+          if (!imported.categories || !Array.isArray(imported.categories)) {
+            alert('导入失败：文件格式不正确（缺少 categories 数组）。');
+            return;
+          }
+
+          const newCount = imported.categories.filter(c => !appData.categories.find(ex => ex.id === c.id)).length;
+          const updateCount = imported.categories.filter(c => appData.categories.find(ex => ex.id === c.id)).length;
+
+          const msg = `即将导入数据：\n\n• ${newCount} 个新学科将被添加\n• ${updateCount} 个已有学科将被更新\n\n当前数据将被覆盖，确定继续？`;
+          if (confirm(msg)) {
+            appData.categories = imported.categories;
+            saveData(appData);
+            render();
+          }
+        } catch (e) {
+          alert('导入失败：无法解析 JSON 文件。');
+        }
+      };
+      reader.readAsText(file);
+    });
+    input.click();
+  };
+
+  renderSidebar(sidebarEl, appData, currentId, {
+    onSelect: (id) => navigate(id),
+    onAdd: (name, icon) => {
+      const cat = { id: name.toLowerCase().replace(/\s+/g, '-'), name, icon, groups: [], stages: [], contentTags: [], stageTags: [] };
+      appData.categories.push(cat);
+      saveData(appData);
+      navigate(cat.id);
+    },
+    onRename: (id, newName) => {
+      const cat = appData.categories.find(c => c.id === id);
+      if (cat) { cat.name = newName; saveData(appData); render(); }
+    },
+    onDelete: (id) => {
+      appData.categories = appData.categories.filter(c => c.id !== id);
+      saveData(appData);
+      if (getCurrentRoute() === id) {
+        navigate(appData.categories[0]?.id || '');
+      } else {
+        render();
+      }
+    },
+    onExport,
+    onImport,
+  });
+
+  renderRoadmap(mainEl, currentCategory, activeContentTags, activeStageTags, {
+    onStageClick: (stageId) => {
+      const stage = currentCategory.stages.find(s => s.id === stageId);
+      if (!stage) return;
+      const isLocked = stage.prerequisites.some(prereqId => {
+        const prereq = currentCategory.stages.find(s => s.id === prereqId);
+        return !prereq || prereq.status !== 'completed';
+      });
+      openStageModal(currentCategory, stage, appData, isLocked,
+        () => {
+          // onSave
+          saveData(appData);
+          render();
+        },
+        () => {
+          // onDelete
+          deleteStage(appData, currentCategory.id, stageId);
+          saveData(appData);
+          render();
+        }
+      );
+    },
+    onAddStage: () => {
+
+          let nameValue = '';
+
+          const modal = openModal('添加阶段', (body) => {
+            // Name input
+            const nameRow = document.createElement('div');
+            nameRow.className = 'sm-row';
+            nameRow.innerHTML = '<label class="sm-label">阶段名称</label>';
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.className = 'sm-select';
+            nameInput.style.flex = '1';
+            nameInput.placeholder = '例如：一元二次方程';
+            nameInput.addEventListener('input', () => { nameValue = nameInput.value.trim(); });
+            nameRow.appendChild(nameInput);
+            body.appendChild(nameRow);
+
+            // Group combobox
+            const groupRow = document.createElement('div');
+            groupRow.className = 'sm-row';
+            groupRow.innerHTML = '<label class="sm-label">所属分组</label>';
+            const combo = createGroupCombobox(currentCategory, currentCategory.groups[0]?.id || null);
+            groupRow.appendChild(combo.el);
+            body.appendChild(groupRow);
+
+            // Actions
+            const actions = document.createElement('div');
+            actions.className = 'sm-actions';
+            const confirmBtn = document.createElement('button');
+            confirmBtn.className = 'sm-btn sm-btn--primary';
+            confirmBtn.textContent = '添加';
+            confirmBtn.addEventListener('click', () => {
+              if (!nameValue) {
+                alert('阶段名称不能为空');
+                return;
+              }
+              if (isStageNameDuplicate(appData, currentCategory.id, nameValue)) {
+                alert('该学科下已存在同名阶段');
+                return;
+              }
+              const groupId = resolveGroupId(currentCategory, combo.getValue(), generateId, () => saveData(appData));
+              const newStage = {
+                id: generateId('stage-'),
+                name: nameValue,
+                groupId,
+                status: 'not-started',
+                percentage: 0,
+                prerequisites: [],
+                softPrerequisites: [],
+                tags: { content: [], stage: [] },
+                items: [],
+              };
+              addStage(appData, currentCategory.id, newStage);
+              saveData(appData);
+              render();
+              modal.close();
+            });
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'sm-btn';
+            cancelBtn.textContent = '取消';
+            cancelBtn.addEventListener('click', () => {
+              modal.close();
+            });
+            actions.appendChild(confirmBtn);
+            actions.appendChild(cancelBtn);
+            body.appendChild(actions);
+          });
+    },
+    onEditGroups: () => {
+        openModal('编辑分组', (body) => {
+          body.innerHTML = '';
+
+          const list = document.createElement('div');
+          list.className = 'sm-groups-list';
+
+          function renderGroupList() {
+            list.innerHTML = '';
+
+            currentCategory.groups.forEach((group, idx) => {
+              const item = document.createElement('div');
+              item.className = 'sm-group-item';
+
+              // Drag handle
+              const handle = document.createElement('span');
+              handle.className = 'sm-group-handle';
+              handle.textContent = '⋮⋮';
+              handle.style.cursor = 'grab';
+              handle.style.marginRight = '8px';
+              handle.style.color = 'var(--color-text-secondary)';
+              item.appendChild(handle);
+
+              // Name input
+              const input = document.createElement('input');
+              input.type = 'text';
+              input.value = group.name;
+              input.className = 'sm-select';
+              input.style.flex = '1';
+              input.addEventListener('change', () => {
+                group.name = input.value.trim() || group.name;
+                saveData(appData);
+                render();
+              });
+              item.appendChild(input);
+
+              // Up / Down buttons
+              const upBtn = document.createElement('button');
+              upBtn.className = 'sm-btn sm-btn--small';
+              upBtn.textContent = '↑';
+              upBtn.title = '上移';
+              upBtn.disabled = idx === 0;
+              upBtn.addEventListener('click', () => {
+                if (idx > 0) {
+                  [currentCategory.groups[idx - 1], currentCategory.groups[idx]] =
+                    [currentCategory.groups[idx], currentCategory.groups[idx - 1]];
+                  saveData(appData);
+                  renderGroupList();
+                }
+              });
+              item.appendChild(upBtn);
+
+              const downBtn = document.createElement('button');
+              downBtn.className = 'sm-btn sm-btn--small';
+              downBtn.textContent = '↓';
+              downBtn.title = '下移';
+              downBtn.disabled = idx === currentCategory.groups.length - 1;
+              downBtn.addEventListener('click', () => {
+                if (idx < currentCategory.groups.length - 1) {
+                  [currentCategory.groups[idx], currentCategory.groups[idx + 1]] =
+                    [currentCategory.groups[idx + 1], currentCategory.groups[idx]];
+                  saveData(appData);
+                  renderGroupList();
+                }
+              });
+              item.appendChild(downBtn);
+
+              // Delete button (only if group has no stages)
+              if (group.stageIds.length === 0) {
+                const delBtn = document.createElement('button');
+                delBtn.className = 'sm-btn sm-btn--small sm-btn--danger';
+                delBtn.textContent = '删除';
+                delBtn.addEventListener('click', () => {
+                  if (confirm(`确定删除分组「${group.name}」？`)) {
+                    currentCategory.groups = currentCategory.groups.filter(g => g.id !== group.id);
+                    saveData(appData);
+                    renderGroupList();
+                  }
+                });
+                item.appendChild(delBtn);
+              } else {
+                const hint = document.createElement('span');
+                hint.className = 'sm-group-hint';
+                hint.textContent = '(该分组下有阶段，无法删除)';
+                hint.style.fontSize = '11px';
+                hint.style.color = 'var(--color-text-secondary)';
+                hint.style.marginLeft = '8px';
+                item.appendChild(hint);
+              }
+
+              list.appendChild(item);
+            });
+          }
+
+          renderGroupList();
+          body.appendChild(list);
+        });
+    },
+    onManageTags: () => {
+        openModal('管理标签', (body) => {
+          // Tab buttons
+          const tabRow = document.createElement('div');
+          tabRow.className = 'sm-tab-row';
+          const contentTab = document.createElement('button');
+          contentTab.className = 'sm-tab active';
+          contentTab.textContent = '内容标签';
+          const stageTab = document.createElement('button');
+          stageTab.className = 'sm-tab';
+          stageTab.textContent = '学段标签';
+          tabRow.appendChild(contentTab);
+          tabRow.appendChild(stageTab);
+          body.appendChild(tabRow);
+
+          const listContainer = document.createElement('div');
+          body.appendChild(listContainer);
+
+          function showTags(type) {
+            const tags = type === 'content' ? currentCategory.contentTags : currentCategory.stageTags;
+            listContainer.innerHTML = '';
+
+            tags.forEach(tag => {
+              const item = document.createElement('div');
+              item.className = 'sm-group-item';
+
+              const input = document.createElement('input');
+              input.type = 'text';
+              input.value = tag.name;
+              input.className = 'sm-select';
+              input.style.flex = '1';
+              input.addEventListener('change', () => {
+                tag.name = input.value.trim() || tag.name;
+                saveData(appData);
+                render();
+              });
+
+              const delBtn = document.createElement('button');
+              delBtn.className = 'sm-btn sm-btn--small sm-btn--danger';
+              delBtn.textContent = '删除';
+              delBtn.addEventListener('click', () => {
+                // Remove tag from all stages
+                currentCategory.stages.forEach(s => {
+                  s.tags[type] = s.tags[type].filter(t => t !== tag.id);
+                });
+                if (type === 'content') {
+                  currentCategory.contentTags = currentCategory.contentTags.filter(t => t.id !== tag.id);
+                } else {
+                  currentCategory.stageTags = currentCategory.stageTags.filter(t => t.id !== tag.id);
+                }
+                saveData(appData);
+                render();
+                showTags(type);
+              });
+
+              item.appendChild(input);
+              item.appendChild(delBtn);
+              listContainer.appendChild(item);
+            });
+
+            // Add new
+            const addRow = document.createElement('div');
+            addRow.className = 'sm-row';
+            addRow.style.marginTop = '12px';
+            const addInput = document.createElement('input');
+            addInput.type = 'text';
+            addInput.placeholder = '新标签名称';
+            addInput.className = 'sm-select';
+            addInput.style.flex = '1';
+            const addBtn = document.createElement('button');
+            addBtn.className = 'sm-btn sm-btn--primary';
+            addBtn.textContent = '添加';
+            addBtn.addEventListener('click', () => {
+              const name = addInput.value.trim();
+              if (name) {
+                const newTag = { id: generateId('tag-'), name };
+                if (type === 'content') {
+                  currentCategory.contentTags.push(newTag);
+                } else {
+                  currentCategory.stageTags.push(newTag);
+                }
+                saveData(appData);
+                render();
+                showTags(type);
+              }
+            });
+            addRow.appendChild(addInput);
+            addRow.appendChild(addBtn);
+            listContainer.appendChild(addRow);
+          }
+
+          contentTab.addEventListener('click', () => {
+            contentTab.classList.add('active');
+            stageTab.classList.remove('active');
+            showTags('content');
+          });
+          stageTab.addEventListener('click', () => {
+            stageTab.classList.add('active');
+            contentTab.classList.remove('active');
+            showTags('stage');
+          });
+
+          showTags('content');
+        });
+    },
+  }, setActiveTags);
+}
+
+// 5. Start router
+initRouter((categoryId) => {
+  // If all categories deleted, show welcome
+  if (appData.categories.length === 0) {
+    mainEl.innerHTML = `<div class="empty-state welcome">
+      <h2>🎓 欢迎使用学习路线图</h2>
+      <p>从左侧「添加学科」开始，构建你的学习路线！</p>
+    </div>`;
+    sidebarEl.innerHTML = '';
+    const addBtn = document.createElement('button');
+    addBtn.className = 'sidebar-add-btn';
+    addBtn.textContent = '+ 添加学科';
+    addBtn.addEventListener('click', () => {
+      render();
+    });
+    sidebarEl.appendChild(addBtn);
+    return;
+  }
+  render();
+});
+
+// 6. Window resize handler for arrow redraw
+let _resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(() => render(), 150);
+});
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+- 用法：**表示某处有某人/某物**。 
+- 构成 
+	- 单数：
+		- **There is +可数名词单数+ (介词短语)** ：There is a cat in the box. 
+		- **There is +不可数名词+ (介词短语)** ：There is some water in the glass. 
+	- 复数：
+		- **There are +可数名词复数+ (介词短语)**： There are some apples on the table. 
+	- **就近原则**： 
+		- There __is__ a banana and two apples on the plate. 
+		- There __are__ two apples and a banana on the plate. 
