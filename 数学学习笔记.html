@@ -343,6 +343,16 @@ body {
 ]
   </script>
   <script src="libs/marked.min.js"></script>
+  <script>
+    // MathJax 配置：$...$ 行内公式、$$...$$ 块级公式；排版由应用在每次渲染后手动触发
+    window.MathJax = {
+      tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] },
+      svg: { fontCache: 'global' },
+      startup: { typeset: false },
+      options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+    };
+  </script>
+  <script src="libs/mathjax/tex-svg.js"></script>
   <script id="render-script">
 // 渲染辅助：数学笔记带 YAML frontmatter，渲染前先剥离，避免元信息被当作正文输出
 window.stripFrontmatter = function (md) {
@@ -350,8 +360,23 @@ window.stripFrontmatter = function (md) {
   return md.replace(/^---\n[\s\S]*?\n---\n?\n?/, '');
 };
 
+window.escapeHtml = function (s) {
+  // 公式还原时按 HTML 转义，DOM 文本节点才是原始公式，MathJax 排版时读取文本
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+};
+
 window.renderNote = function (md) {
-  return window.marked.parse(window.stripFrontmatter(md));
+  // 公式保护：先把 $$...$$ / $...$ 抽成占位符再交给 marked，
+  // 避免公式内的 * _ < 反斜杠等被当作 markdown 语法破坏；
+  // 渲染后按 HTML 转义放回原处。
+  const math = [];
+  const protectedMd = window.stripFrontmatter(md).replace(/\$\$[\s\S]+?\$\$|\$[^$\n]+\$/g, function (m) {
+    math.push(m);
+    return '\uE000M' + (math.length - 1) + '\uE000';
+  });
+  return window.marked.parse(protectedMd).replace(/\uE000M(\d+)\uE000/g, function (_, i) {
+    return window.escapeHtml(math[+i]);
+  });
 };
   </script>
   <script id="app-script">
@@ -442,6 +467,20 @@ window.renderNote = function (md) {
       '</div>';
   }
 
+  // MathJax 需等 startup.promise 完成（DOMContentLoaded 之后）才能排版；
+  // 首次渲染发生在页面解析期间，必须先等启动完成，后续导航则直接排版。
+  function typesetMath(root) {
+    if (!window.MathJax || !window.MathJax.typesetPromise) return;
+    const whenReady = window.MathJax.startup && window.MathJax.startup.promise
+      ? window.MathJax.startup.promise
+      : Promise.resolve();
+    whenReady.then(function () {
+      return window.MathJax.typesetPromise([root]);
+    }).catch(function (err) {
+      console.error('公式排版失败:', err);
+    });
+  }
+
   async function loadEntry(key, entry) {
     if (key === currentKey) return; // hashchange 与显式调用去重
     currentKey = key;
@@ -454,6 +493,7 @@ window.renderNote = function (md) {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const md = await res.text();
       bodyEl.innerHTML = window.renderNote(md);
+      typesetMath(bodyEl);
     } catch (err) {
       console.error('加载笔记失败:', entry.item.file, err);
       showState(
