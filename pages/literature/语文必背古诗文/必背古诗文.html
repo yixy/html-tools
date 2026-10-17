@@ -77,15 +77,24 @@
             font-family: "Kaiti SC", "STKaiti", "KaiTi", "楷体", "SimSun", serif;
             font-size: 17px;
             color: #444;
+            line-height: 2.4;
         }
         #content p strong { color: #333; }
+        #content ruby { ruby-align: center; }
+        #content rt {
+            font-size: 0.5em;
+            color: #8a8a8a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        }
         #content p.author {
             text-align: center;
             color: #999;
             font-size: 13px;
             margin: -4px 0 6px;
             font-family: inherit;
+            line-height: 2;
         }
+        #content p.author rt { font-size: 0.45em; }
         .load-error {
             background: #fff8e6;
             border-left: 4px solid #f0a500;
@@ -116,6 +125,7 @@
         </article>
     </div>
     <script src="../../../libs/marked.min.js"></script>
+    <script src="pinyin-ruby.js"></script>
     <script>
     (function () {
         'use strict';
@@ -140,7 +150,9 @@
         marked.use({
             renderer: {
                 paragraph: function (text) {
-                    if (AUTHOR_RE.test(text) || AUTHOR_NAMES.indexOf(text) !== -1) {
+                    // 先剥掉 ruby 注音再识别，让带注音的作者行仍能匹配
+                    var plain = text.replace(/<rt>[^<]*<\/rt>/g, '').replace(/<\/?ruby>/g, '');
+                    if (AUTHOR_RE.test(plain) || AUTHOR_NAMES.indexOf(plain) !== -1) {
                         return '<p class="author">' + text + '</p>\n';
                     }
                     return false; // 其余段落走默认渲染
@@ -161,7 +173,7 @@
                 return res.text();
             })
             .then(function (md) {
-                contentEl.innerHTML = marked.parse(md);
+                contentEl.innerHTML = marked.parse(pinyinToRuby(md));
                 var mh1 = contentEl.querySelector('h1');
                 if (mh1) {
                     pageTitle.textContent = mh1.textContent;
