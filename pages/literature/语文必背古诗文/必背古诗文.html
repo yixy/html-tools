@@ -11,12 +11,12 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
             background-color: #f4f7f6;
             margin: 0;
-            padding: 20px;
+            padding: 20px clamp(16px, 3vw, 48px);
             color: #333;
             line-height: 1.8;
-            font-size: 16px;
+            font-size: 17px;
         }
-        .page { max-width: 860px; margin: 0 auto; }
+        .page { width: 100%; margin: 0 auto; }
         .nav { margin-bottom: 16px; }
         .nav a {
             display: inline-block;
@@ -34,9 +34,9 @@
             background: white;
             border-radius: 16px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            padding: 40px 44px;
+            padding: clamp(24px, 3vw, 48px) clamp(20px, 4vw, 64px);
         }
-        h1 { font-size: 32px; text-align: center; margin: 0 0 16px; color: #222; }
+        h1 { font-size: clamp(30px, 2vw + 18px, 42px); text-align: center; margin: 0 0 16px; color: #222; }
         .grade-nav {
             position: sticky;
             top: 0;
@@ -64,7 +64,7 @@
         }
         .grade-nav a:hover { background: #d6f1e3; }
         #content h2 {
-            font-size: 22px;
+            font-size: clamp(21px, 1.2vw + 12px, 30px);
             color: #07c160;
             border-left: 4px solid #07c160;
             padding-left: 12px;
@@ -75,7 +75,7 @@
             margin: 10px 0;
             white-space: pre-line;
             font-family: "Kaiti SC", "STKaiti", "KaiTi", "楷体", "SimSun", serif;
-            font-size: 17px;
+            font-size: clamp(19px, 0.8vw + 14px, 26px);
             color: #444;
             line-height: 2.4;
         }
@@ -89,7 +89,7 @@
         #content p.author {
             text-align: center;
             color: #999;
-            font-size: 13px;
+            font-size: 15px;
             margin: -4px 0 6px;
             font-family: inherit;
             line-height: 2;
