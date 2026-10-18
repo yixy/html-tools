@@ -17,6 +17,12 @@
             font-size: 17px;
         }
         .page { width: 100%; margin: 0 auto; }
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
+            gap: 24px;
+            align-items: start;
+        }
         .nav { margin-bottom: 16px; }
         .nav a {
             display: inline-block;
@@ -30,6 +36,64 @@
             transition: background-color 0.3s;
         }
         .nav a:hover { background-color: #06ad56; }
+        .toc {
+            position: sticky;
+            top: 16px;
+            max-height: calc(100vh - 32px);
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 18px 10px 18px 16px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .toc-header {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            padding: 0 8px 10px 0;
+            border-bottom: 1px solid #e4efe9;
+        }
+        .toc-title { font-size: 17px; font-weight: 600; color: #222; letter-spacing: 0.08em; }
+        .toc-count { font-size: 12px; color: #9aa5a0; }
+        .toc-list {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            padding: 8px 4px 0 0;
+            scrollbar-width: thin;
+        }
+        .toc-group { margin-bottom: 10px; }
+        .toc-group-title {
+            display: block;
+            color: #07c160;
+            font-weight: 600;
+            font-size: 13px;
+            text-decoration: none;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        .toc-group-title:hover { background: #eef8f2; }
+        .toc-group ol { list-style: none; margin: 2px 0 0; padding: 0; }
+        .toc-poem a {
+            display: block;
+            padding: 3px 8px;
+            border-radius: 6px;
+            color: #555;
+            font-size: 13px;
+            line-height: 1.7;
+            text-decoration: none;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .toc-poem a:hover { background: #eef8f2; color: #0a7a45; }
+        .toc-poem a.active { background: #07c160; color: white; }
+        #content p.poem-title { scroll-margin-top: var(--nav-offset, 70px); }
         article {
             background: white;
             border-radius: 16px;
@@ -106,6 +170,10 @@
             color: #8a6d3b;
         }
         .footer-note { text-align: center; color: #aaa; font-size: 13px; margin-top: 40px; }
+        @media (max-width: 900px) {
+            .layout { display: block; }
+            .toc { display: none; }
+        }
         @media (max-width: 600px) {
             article { padding: 24px 18px; }
             h1 { font-size: 26px; }
@@ -119,15 +187,25 @@
             <a href="../../../中国古代经典文学作品.html">← 返回作品列表</a>
             <a href="../../../index.html">← 返回首页</a>
         </div>
-        <article>
-            <h1 id="page-title">必背古诗文</h1>
-            <div class="grade-nav" id="grade-nav"></div>
-            <div id="content"><p>加载中…</p></div>
-            <p class="footer-note">内容来自 markdown 源文件，随源文件更新自动同步</p>
-        </article>
+        <div class="layout">
+            <aside class="toc" id="toc" aria-label="古诗目录">
+                <div class="toc-header">
+                    <span class="toc-title">目录</span>
+                    <span class="toc-count" id="toc-count"></span>
+                </div>
+                <nav class="toc-list" id="toc-list"></nav>
+            </aside>
+            <article>
+                <h1 id="page-title">必背古诗文</h1>
+                <div class="grade-nav" id="grade-nav"></div>
+                <div id="content"><p>加载中…</p></div>
+                <p class="footer-note">内容来自 markdown 源文件，随源文件更新自动同步</p>
+            </article>
+        </div>
     </div>
     <script src="../../../libs/marked.min.js"></script>
     <script src="pinyin-ruby.js"></script>
+    <script src="toc-nav.js"></script>
     <script>
     (function () {
         'use strict';
@@ -138,11 +216,15 @@
         var contentEl = document.getElementById('content');
         var navEl = document.getElementById('grade-nav');
         var pageTitle = document.getElementById('page-title');
+        var tocListEl = document.getElementById('toc-list');
+        var tocCountEl = document.getElementById('toc-count');
         window.addEventListener('resize', updateNavOffset);
 
         function showError(msg) {
             contentEl.innerHTML = '<div class="load-error">' + msg + '</div>';
             navEl.innerHTML = '';
+            tocListEl.innerHTML = '';
+            tocCountEl.textContent = '';
         }
 
         // 作者行识别：如“唐 · 骆宾王”“唐·白居易”，或无朝代的作品总集/作者名
@@ -175,6 +257,7 @@
                 return res.text();
             })
             .then(function (md) {
+                var toc = parseToc(md);
                 contentEl.innerHTML = marked.parse(pinyinToRuby(md));
                 var mh1 = contentEl.querySelector('h1');
                 if (mh1) {
@@ -183,6 +266,8 @@
                     mh1.remove();
                 }
                 buildGradeNav();
+                buildToc(toc);
+                setupScrollSpy();
             })
             .catch(function () {
                 showError('内容加载失败');
@@ -198,6 +283,109 @@
             }
             navEl.innerHTML = html;
             updateNavOffset();
+        }
+
+        function escapeHtml(s) {
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function buildToc(groups) {
+            // 每首诗标题是一个仅含 <strong> 的段落，按文档顺序分配锚点
+            var paragraphs = contentEl.querySelectorAll('p');
+            var poemIndex = 0;
+            for (var i = 0; i < paragraphs.length; i++) {
+                var first = paragraphs[i].firstElementChild;
+                if (first && first.tagName === 'STRONG') {
+                    paragraphs[i].id = 'poem-' + poemIndex;
+                    paragraphs[i].className = 'poem-title';
+                    poemIndex++;
+                }
+            }
+
+            var html = '';
+            var n = 0;
+            for (var g = 0; g < groups.length; g++) {
+                html += '<div class="toc-group">';
+                html += '<a class="toc-group-title" href="#grade-' + g + '">' + escapeHtml(groups[g].title) + '</a><ol>';
+                for (var k = 0; k < groups[g].poems.length; k++) {
+                    html += '<li class="toc-poem"><a href="#poem-' + n + '" data-target="poem-' + n + '">' +
+                        escapeHtml(groups[g].poems[k].title) + '</a></li>';
+                    n++;
+                }
+                html += '</ol></div>';
+            }
+            tocListEl.innerHTML = html;
+            tocCountEl.textContent = n + ' 首';
+        }
+
+        var tocLinks = [];
+        var tocTargets = [];
+        var activeLink = null;
+        var spyPending = false;
+
+        function setupScrollSpy() {
+            tocLinks = tocListEl.querySelectorAll('a[data-target]');
+            tocTargets = [];
+            for (var i = 0; i < tocLinks.length; i++) {
+                tocTargets.push(document.getElementById(tocLinks[i].getAttribute('data-target')));
+            }
+            window.addEventListener('scroll', requestScrollSpy, { passive: true });
+            updateActivePoem();
+            if (location.hash) {
+                var hashTarget = document.getElementById(location.hash.slice(1));
+                if (hashTarget && hashTarget.scrollIntoView) hashTarget.scrollIntoView();
+            }
+        }
+
+        function requestScrollSpy() {
+            if (spyPending) return;
+            spyPending = true;
+            window.requestAnimationFrame(function () {
+                spyPending = false;
+                updateActivePoem();
+            });
+        }
+
+        function updateActivePoem() {
+            if (!tocLinks.length) return;
+            var threshold = navEl.offsetHeight + 40;
+            var index = 0;
+            for (var i = 0; i < tocTargets.length; i++) {
+                var target = tocTargets[i];
+                if (target && target.getBoundingClientRect().top <= threshold) {
+                    index = i;
+                } else {
+                    break;
+                }
+            }
+            var scrollY = window.scrollY || window.pageYOffset || 0;
+            if (scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4) {
+                index = tocLinks.length - 1;
+            }
+            setActiveLink(index);
+        }
+
+        function setActiveLink(index) {
+            var link = tocLinks[index];
+            if (!link || link === activeLink) return;
+            if (activeLink) {
+                activeLink.classList.remove('active');
+                activeLink.removeAttribute('aria-current');
+            }
+            activeLink = link;
+            link.classList.add('active');
+            link.setAttribute('aria-current', 'true');
+
+            // 让当前项始终留在侧栏可视区域内
+            var linkRect = link.getBoundingClientRect();
+            var listRect = tocListEl.getBoundingClientRect();
+            if (linkRect.top < listRect.top + 8 || linkRect.bottom > listRect.bottom - 8) {
+                tocListEl.scrollTop += linkRect.top - listRect.top - listRect.height / 2;
+            }
         }
 
         function updateNavOffset() {
