@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>收支统计小工具</title>
+<style>
+:root{
+  --bg:#f2f5fa; --card:#fff; --text:#1f2937; --muted:#7b8794; --line:#e6eaf1;
+  --primary:#3b6ef6;
+  --high-bg:#fdeeee; --high:#d94a4a;
+  --low-bg:#e9f1fe;  --low:#2f6fed;
+  --cash-bg:#e8f6ee; --cash:#199c5b;
+  --radius:12px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);font-size:14px;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;
+}
+.app{max-width:1200px;margin:0 auto;padding:22px 16px 70px}
+header h1{font-size:20px;margin:0 0 5px;letter-spacing:.5px}
+header p{margin:0;color:var(--muted);font-size:12.5px}
+
+/* ---------- Tabs ---------- */
+.tabs{
+  display:flex;gap:8px;margin:18px 0 16px;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;padding-bottom:2px;
+}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex:0 0 auto;
+  padding:9px 20px;border-radius:10px;border:1px solid var(--line);background:#fff;
+  color:var(--muted);cursor:pointer;font-size:14px;font-weight:500;transition:.16s;font-family:inherit;
+}
+.tab:hover{color:var(--primary);border-color:#c7d7fb}
+.tab.active{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 4px 12px rgba(59,110,246,.25)}
+
+/* ---------- Card ---------- */
+.card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:0 1px 3px rgba(16,24,40,.06);margin-bottom:16px}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.card-title{font-size:15px;font-weight:600}
+.card-title small{font-weight:400;color:var(--muted);font-size:12px;margin-left:8px}
+.card-tools{display:flex;align-items:center;gap:8px}
+
+/* ---------- 表单控件 ---------- */
+input[type=number],input[type=text],input[type=month],input[type=date],select{
+  width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;
+  background:#fff;color:var(--text);outline:none;font-family:inherit;transition:.15s;
+}
+input:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(59,110,246,.12)}
+input::placeholder{color:#b6bfcc}
+button{font-family:inherit;cursor:pointer}
+.btn{padding:8px 15px;border-radius:9px;border:1px solid var(--line);background:#fff;font-size:13px;color:var(--text);transition:.15s}
+.btn:hover{border-color:#c7d7fb;color:var(--primary)}
+.btn-primary{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn-primary:hover{background:#2f5fe0;border-color:#2f5fe0;color:#fff}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#9aa6b8 50%),linear-gradient(135deg,#9aa6b8 50%,transparent 50%);
+  background-position:calc(100% - 16px) 52%,calc(100% - 11px) 52%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:28px}
+
+/* ---------- 支出列表 ---------- */
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.cat-row,.cat-head{
+  display:grid;grid-template-columns:86px 118px 118px 78px 78px minmax(170px,1fr);
+  gap:8px;align-items:center;min-width:700px;
+}
+.cat-head{padding:0 10px 8px;color:var(--muted);font-size:12.5px}
+.cat-head span:nth-child(2){text-align:right;padding-right:8px}
+.cat-row{padding:8px 10px;border-radius:10px;transition:.12s}
+.cat-row:hover{background:#f8fafd}
+.cat-name{font-weight:500}
+.cat-amount{text-align:right;padding-right:8px;font-weight:600;font-variant-numeric:tabular-nums}
+.btn-add,.btn-sub{padding:7px 0;border-radius:8px;font-size:12.5px;font-weight:500;border:1px solid transparent;transition:.15s}
+.btn-add{background:#e8f6ee;color:#199c5b;border-color:#c9ebd8}
+.btn-add:hover{background:#d5efe1}
+.btn-sub{background:#fdeeee;color:#d94a4a;border-color:#f7d5d5}
+.btn-sub:hover{background:#fbe0e0}
+.sum-bar{margin-top:10px;padding:11px 16px;background:#f7f9fc;border-radius:10px;text-align:right;font-size:13px;color:var(--muted)}
+.sum-bar b{color:var(--primary);font-size:18px;margin-left:8px;font-variant-numeric:tabular-nums}
+
+/* ---------- 表格 ---------- */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px 10px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+thead th{background:#f7f9fc;color:#55617a;font-weight:600;font-size:12.5px}
+tbody tr:hover td{background:#fafcff}
+.month-cell{font-weight:600;font-variant-numeric:tabular-nums}
+.total-cell{font-weight:700;color:var(--primary);font-variant-numeric:tabular-nums}
+.empty{text-align:center;color:var(--muted);padding:28px 10px}
+.del{border:none;background:transparent;color:#c3ccd9;font-size:14px;padding:4px 7px;border-radius:6px;transition:.15s}
+.del:hover{background:#fdeeee;color:#d94a4a}
+
+/* 资产分组配色 */
+th.h-high{background:var(--high-bg);color:var(--high)}
+th.h-low{background:var(--low-bg);color:var(--low)}
+th.h-cash{background:var(--cash-bg);color:var(--cash)}
+th.th-rate{font-weight:500;font-size:12px;opacity:.9}
+td.cell{padding:6px 8px}
+td.cell.high{background:#fef8f8}
+td.cell.low{background:#f7faff}
+td.cell.cash{background:#f7fdfa}
+td.rate-cell{padding:6px 6px}
+td.cell input,td.rate-cell input{text-align:right;font-variant-numeric:tabular-nums}
+td.rate-cell input{font-size:12.5px;color:#55617a;padding:7px 8px}
+td.cell input{min-width:82px}
+
+/* ---------- 定投 ---------- */
+.dca-form{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.dca-form>*{flex:1 1 110px;min-width:100px}
+.dca-form .ro{background:#f7f9fc;color:var(--muted)}
+.dca-form button{flex:0 0 auto;min-width:92px}
+.badge{display:inline-block;padding:2px 12px;border-radius:20px;font-size:12px;font-weight:500}
+.badge.buy{background:#e8f6ee;color:#199c5b}
+.badge.sell{background:#fdeeee;color:#d94a4a}
+.type-tag{display:inline-block;padding:2px 10px;border-radius:6px;background:#eef2f9;color:#55617a;font-size:12px}
+.dca-sum{margin-top:10px;padding:11px 16px;background:#f7f9fc;border-radius:10px;font-size:13px;color:var(--muted);display:flex;gap:22px;flex-wrap:wrap}
+.dca-sum b{color:var(--text);font-variant-numeric:tabular-nums;margin-left:4px}
+
+.mobile-only{display:none}
+
+/* ---------- Toast ---------- */
+#toast{
+  position:fixed;left:50%;bottom:38px;transform:translate(-50%,20px);
+  background:rgba(31,41,55,.93);color:#fff;padding:10px 20px;border-radius:10px;
+  font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:99;
+  max-width:88vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ==================== 响应式：平板 ==================== */
+@media (max-width: 900px){
+  .app{padding:18px 12px 64px}
+  header h1{font-size:19px}
+  .card{padding:14px}
+}
+
+/* ==================== 响应式：手机 ==================== */
+@media (max-width: 760px){
+  body{font-size:14px}
+  .app{padding:14px 10px 60px}
+  header h1{font-size:18px}
+  header p{font-size:12px}
+
+  .tab{padding:9px 16px;font-size:14px}
+
+  .card{padding:12px;border-radius:10px}
+  .card-head{flex-direction:column;align-items:stretch;gap:10px}
+  .card-tools{width:100%}
+  .card-tools input[type=month]{flex:1;width:auto}
+  .card-tools .btn{flex:0 0 auto}
+
+  /* iOS 输入框不缩放 */
+  input[type=number],input[type=text],input[type=month],input[type=date],select{
+    font-size:16px;padding:10px 12px;border-radius:9px;
+  }
+
+  /* 支出：转为卡片式 */
+  .cat-head{display:none}
+  .cat-row{
+    grid-template-columns:1fr auto;
+    grid-template-areas:
+      "name  amount"
+      "amt   amt"
+      "add   sub"
+      "note  note";
+    gap:8px;
+    padding:12px;
+    margin-bottom:9px;
+    background:#f8fafd;
+    border:1px solid var(--line);
+    border-radius:10px;
+    min-width:0;
+  }
+  .cat-row:hover{background:#f8fafd}
+  .cat-name{grid-area:name;font-size:14.5px}
+  .cat-amount{grid-area:amount;padding:0;text-align:right;font-size:15px;color:var(--primary)}
+  .cat-row .amt{grid-area:amt}
+  .btn-add{grid-area:add;padding:11px 0;font-size:15px}
+  .btn-sub{grid-area:sub;padding:11px 0;font-size:15px}
+  .cat-row .note{grid-area:note}
+  .sum-bar{margin-top:4px}
+
+  /* 表格字号与触控 */
+  table{font-size:12.5px}
+  th,td{padding:9px 8px}
+  .del{padding:8px 11px;font-size:16px}
+  .mobile-only{display:block;color:var(--muted);font-size:12px;margin:-4px 0 8px}
+
+  /* 定投表单纵向排列 */
+  .dca-form>*{flex:1 1 100%;min-width:0}
+  .dca-form button{width:100%;padding:12px 0;font-size:15px}
+  .dca-form .ro{font-size:15px}
+
+  .dca-sum{gap:10px 18px;font-size:12.5px;line-height:1.9}
+
+  #toast{bottom:24px;font-size:13px}
+}
+
+/* 超小屏 */
+@media (max-width: 380px){
+  .tab{padding:8px 13px;font-size:13.5px}
+  .card-title{font-size:14px}
+  .cat-amount{font-size:14px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>💰 收支统计小工具</h1>
+    <p>数据保存在本机浏览器（localStorage），不上传任何服务器</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="expense">支出统计</button>
+    <button class="tab" data-tab="asset">资产管理</button>
+    <button class="tab" data-tab="dca">定投管理</button>
+  </div>
+
+  <!-- ================= 支出统计 ================= -->
+  <section id="page-expense">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">本期记账 <small>输入金额后点击「增加 / 扣减」，备注可直接编辑</small></div>
+        <div class="card-tools">
+          <span style="color:var(--muted);font-size:13px;flex:0 0 auto">月份</span>
+          <input type="month" id="expenseMonth" style="width:155px">
+        </div>
+      </div>
+      <div class="scroll-x">
+        <div class="cat-head">
+          <span>栏位</span><span>本期金额</span><span>录入金额</span><span></span><span></span><span>备注</span>
+        </div>
+        <div id="expenseList"></div>
+      </div>
+      <div class="sum-bar">本期合计 <b id="expenseTotal">¥0.00</b></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">月度汇总 <small>按月汇总各栏位金额</small></div>
+      </div>
+      <div class="mobile-only">左右滑动表格查看更多 →</div>
+      <div id="expenseSummary" class="scroll-x"></div>
+    </div>
+  </section>
+
+  <!-- ================= 资产管理 ================= -->
+  <section id="page-asset" style="display:none">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">资产月度台账 <small>红=高风险账户 · 蓝=低风险账户 · 绿=现金流账户</small></div>
+        <div class="card-tools">
+          <input type="month" id="assetNewMonth" style="width:155px">
+          <button class="btn btn-primary" id="addAssetMonth">添加月份</button>
+        </div>
+      </div>
+      <div class="mobile-only">左右滑动表格查看全部资产列 →</div>
+      <div class="scroll-x">
+        <table style="min-width:1180px">
+          <thead>
+            <tr>
+              <th>月份</th>
+              <th class="h-high">宽基+股票</th>
+              <th class="h-high th-rate">收益率</th>
+              <th class="h-high">黄金</th>
+              <th class="h-high th-rate">收益率</th>
+              <th class="h-low">债基</th>
+              <th class="h-low th-rate">收益率</th>
+              <th class="h-cash">定期</th>
+              <th class="h-cash th-rate">收益率</th>
+              <th class="h-cash">活期</th>
+              <th class="h-cash th-rate">收益率</th>
+              <th>合计</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="assetBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 定投管理 ================= -->
+  <section id="page-dca" style="display:none">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">定投记录 <small>交易金额 = 价格 × 份数（自动计算）</small></div>
+      </div>
+      <div class="dca-form">
+        <input type="date" id="dcaDate">
+        <select id="dcaType">
+          <option value="宽基+股票">宽基+股票</option>
+          <option value="黄金">黄金</option>
+          <option value="债基">债基</option>
+          <option value="定期">定期</option>
+          <option value="活期">活期</option>
+          <option value="其他">其他</option>
+        </select>
+        <input type="number" id="dcaPrice" step="0.0001" placeholder="价格">
+        <input type="number" id="dcaShares" step="0.01" placeholder="份数">
+        <input type="text" id="dcaAmount" class="ro" placeholder="交易金额（自动）" readonly>
+        <select id="dcaDir">
+          <option value="buy">买入</option>
+          <option value="sell">卖出</option>
+        </select>
+        <button class="btn btn-primary" id="dcaAdd">添加记录</button>
+      </div>
+      <div class="mobile-only">左右滑动表格查看更多 →</div>
+      <div class="scroll-x">
+        <table style="min-width:660px">
+          <thead>
+            <tr>
+              <th>日期</th><th>类型</th><th>价格</th><th>份数</th>
+              <th>交易金额</th><th>交易方向</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="dcaBody"></tbody>
+        </table>
+      </div>
+      <div class="dca-sum" id="dcaSum"></div>
+    </div>
+  </section>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ==================== 常量 ==================== */
+const CATS = [
+  {key:'food',    name:'餐饮'},
+  {key:'travel',  name:'出行'},
+  {key:'housing', name:'住宿水电'},
+  {key:'recharge',name:'充值'},
+  {key:'beauty',  name:'服饰美容'},
+  {key:'fun',     name:'休闲娱乐'},
+  {key:'medical', name:'医疗'},
+  {key:'edu',     name:'教育'},
+  {key:'shopping',name:'购物'},
+  {key:'other',   name:'其他'}
+];
+
+/* 资产栏位：每个栏位拆为「金额 + 收益率」两列 */
+const ASSET_COLS = [
+  {key:'stock',  name:'宽基+股票', cls:'high'},
+  {key:'gold',   name:'黄金',      cls:'high'},
+  {key:'bond',   name:'债基',      cls:'low'},
+  {key:'fixed',  name:'定期',      cls:'cash'},
+  {key:'current',name:'活期',      cls:'cash'}
+];
+
+const DB_KEY = 'money_tool_v1';
+
+/* ==================== 数据层 ==================== */
+let db = { expenses:{}, assets:{}, dca:[] };
+
+function load(){
+  try{
+    const raw = localStorage.getItem(DB_KEY);
+    if(raw){
+      const p = JSON.parse(raw);
+      db.expenses = p.expenses || {};
+      db.assets   = p.assets   || {};
+      db.dca      = p.dca      || [];
+    }
+  }catch(e){ console.warn('读取本地数据失败', e); }
+}
+function save(){
+  try{ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+  catch(e){ toast('保存失败：' + e.message); }
+}
+
+/* ==================== 工具函数 ==================== */
+function pad2(n){ return String(n).padStart(2,'0'); }
+function curMonth(){ const d=new Date(); return d.getFullYear()+'-'+pad2(d.getMonth()+1); }
+function todayStr(){ const d=new Date(); return curMonth()+'-'+pad2(d.getDate()); }
+function fmt(n){
+  const v = Number(n)||0;
+  return v.toLocaleString('zh-CN',{minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function fmtNum(n,d){
+  return (Number(n)||0).toLocaleString('zh-CN',{minimumFractionDigits:d, maximumFractionDigits:d});
+}
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+let toastTimer;
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 1800);
+}
+
+/* ==================== 全局状态 ==================== */
+const state = { tab:'expense', expenseMonth: curMonth() };
+
+/* ==================== 支出统计 ==================== */
+function ensureExpMonth(m){
+  if(!db.expenses[m]) db.expenses[m] = {};
+  return db.expenses[m];
+}
+
+function renderExpense(){
+  const m = state.expenseMonth;
+  document.getElementById('expenseMonth').value = m;
+  const data = db.expenses[m] || {};
+  let total = 0;
+
+  const html = CATS.map(c=>{
+    const rec = data[c.key] || {amount:0, note:''};
+    total += Number(rec.amount)||0;
+    return `<div class="cat-row">
+      <div class="cat-name">${c.name}</div>
+      <div class="cat-amount">¥${fmt(rec.amount)}</div>
+      <input class="amt" type="number" step="0.01" min="0" placeholder="金额" data-amt="${c.key}">
+      <button class="btn-add" data-act="add" data-cat="${c.key}">+ 增加</button>
+      <button class="btn-sub" data-act="sub" data-cat="${c.key}">− 扣减</button>
+      <input class="note" type="text" placeholder="备注…" value="${esc(rec.note)}" data-note="${c.key}">
+    </div>`;
+  }).join('');
+
+  document.getElementById('expenseList').innerHTML = html;
+  document.getElementById('expenseTotal').textContent = '¥' + fmt(total);
+}
+
+function renderExpenseSummary(){
+  const months = Object.keys(db.expenses).filter(m=>{
+    const d = db.expenses[m] || {};
+    return CATS.some(c=>{
+      const r = d[c.key];
+      return r && ((Number(r.amount)||0)!==0 || (r.note||'')!=='');
+    });
+  }).sort().reverse();
+
+  let html = `<table style="min-width:760px"><thead><tr><th>月份</th>${
+    CATS.map(c=>`<th>${c.name}</th>`).join('')
+  }<th>合计</th></tr></thead><tbody>`;
+
+  if(!months.length){
+    html += `<tr><td colspan="${CATS.length+2}" class="empty">暂无记录</td></tr>`;
+  }else{
+    months.forEach(m=>{
+      const d = db.expenses[m] || {};
+      let total = 0;
+      const tds = CATS.map(c=>{
+        const v = Number(d[c.key] && d[c.key].amount) || 0;
+        total += v;
+        return `<td>${v ? '¥'+fmt(v) : '-'}</td>`;
+      }).join('');
+      html += `<tr><td class="month-cell">${m}</td>${tds}<td class="total-cell">¥${fmt(total)}</td></tr>`;
+    });
+  }
+  html += '</tbody></table>';
+  document.getElementById('expenseSummary').innerHTML = html;
+}
+
+/* 支出：增加 / 扣减 */
+document.getElementById('expenseList').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-act]');
+  if(!btn) return;
+  const cat  = btn.dataset.cat;
+  const row  = btn.closest('.cat-row');
+  const inp  = row.querySelector('.amt');
+  const val  = parseFloat(inp.value);
+
+  if(!inp.value || isNaN(val) || val <= 0){
+    inp.focus();
+    toast('请输入大于 0 的金额');
+    return;
+  }
+
+  const d = ensureExpMonth(state.expenseMonth);
+  if(!d[cat]) d[cat] = {amount:0, note:''};
+  const sign = btn.dataset.act === 'add' ? 1 : -1;
+  d[cat].amount = +((Number(d[cat].amount)||0) + sign*val).toFixed(2);
+
+  save();
+  renderExpense();
+  renderExpenseSummary();
+});
+
+/* 支出：备注实时保存 */
+document.getElementById('expenseList').addEventListener('input', e=>{
+  const t = e.target;
+  if(!t.dataset.note) return;
+  const d = ensureExpMonth(state.expenseMonth);
+  const k = t.dataset.note;
+  if(!d[k]) d[k] = {amount:0, note:''};
+  d[k].note = t.value;
+  save();
+});
+
+/* 支出：月份切换 */
+document.getElementById('expenseMonth').addEventListener('change', e=>{
+  state.expenseMonth = e.target.value || curMonth();
+  renderExpense();
+});
+
+/* ==================== 资产管理 ==================== */
+function ensureAssetMonth(m){
+  if(!db.assets[m]) db.assets[m] = {};
+  ASSET_COLS.forEach(a=>{
+    if(!db.assets[m][a.key]) db.assets[m][a.key] = {amount:0, rate:0};
+  });
+  return db.assets[m];
+}
+
+function renderAssets(){
+  const months = Object.keys(db.assets).sort().reverse();
+  const tbody  = document.getElementById('assetBody');
+
+  if(!months.length){
+    tbody.innerHTML = `<tr><td colspan="13" class="empty">暂无数据，点击上方「添加月份」开始记录</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = months.map(m=>{
+    const d = db.assets[m] || {};
+    let total = 0;
+
+    /* 每个栏位输出两列：金额 + 收益率 */
+    const cells = ASSET_COLS.map(a=>{
+      const rec = d[a.key] || {amount:0, rate:0};
+      total += Number(rec.amount)||0;
+      const amtV  = (Number(rec.amount)||0) !== 0 ? rec.amount : '';
+      const rateV = (Number(rec.rate)||0)   !== 0 ? rec.rate   : '';
+      return `<td class="cell ${a.cls}">
+          <input class="amt" type="number" step="0.01" placeholder="金额"
+                 value="${amtV}" data-m="${m}" data-k="${a.key}" data-f="amount">
+        </td>
+        <td class="rate-cell">
+          <input class="rate" type="number" step="0.01" placeholder="%"
+                 value="${rateV}" data-m="${m}" data-k="${a.key}" data-f="rate">
+        </td>`;
+    }).join('');
+
+    return `<tr data-row="${m}">
+      <td class="month-cell">${m}</td>
+      ${cells}
+      <td class="total-cell" data-total="${m}">¥${fmt(total)}</td>
+      <td><button class="del" data-del="${m}" title="删除该月">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+/* 资产：输入即保存 + 刷新合计 */
+document.getElementById('assetBody').addEventListener('input', e=>{
+  const t = e.target;
+  if(!t.dataset.m) return;
+  const {m,k,f} = t.dataset;
+  const d = ensureAssetMonth(m);
+  const v = parseFloat(t.value);
+  d[k][f] = isNaN(v) ? 0 : v;
+  save();
+
+  let total = 0;
+  ASSET_COLS.forEach(a=> total += Number(d[a.key].amount)||0);
+  const cell = document.querySelector(`[data-total="${m}"]`);
+  if(cell) cell.textContent = '¥' + fmt(total);
+});
+
+/* 资产：删除月份 */
+document.getElementById('assetBody').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-del]');
+  if(!b) return;
+  const m = b.dataset.del;
+  if(!confirm(`确定删除 ${m} 的资产记录吗？`)) return;
+  delete db.assets[m];
+  save();
+  renderAssets();
+});
+
+/* 资产：添加月份 */
+document.getElementById('addAssetMonth').addEventListener('click', ()=>{
+  const m = document.getElementById('assetNewMonth').value;
+  if(!m){ toast('请选择月份'); return; }
+  if(db.assets[m]){ toast('该月份已存在'); return; }
+  ensureAssetMonth(m);
+  save();
+  renderAssets();
+});
+
+/* ==================== 定投管理 ==================== */
+function renderDca(){
+  const list = [...db.dca].sort((a,b)=>{
+    if(a.date === b.date) return b.id - a.id;
+    return a.date < b.date ? 1 : -1;
+  });
+
+  let buySum = 0, sellSum = 0;
+  const rows = list.map(r=>{
+    const amt = (Number(r.price)||0) * (Number(r.shares)||0);
+    if(r.dir === 'buy') buySum += amt; else sellSum += amt;
+    return `<tr>
+      <td>${esc(r.date)}</td>
+      <td><span class="type-tag">${esc(r.type || '—')}</span></td>
+      <td>${fmtNum(r.price,4)}</td>
+      <td>${fmtNum(r.shares,2)}</td>
+      <td class="total-cell">¥${fmt(amt)}</td>
+      <td><span class="badge ${r.dir==='buy'?'buy':'sell'}">${r.dir==='buy'?'买入':'卖出'}</span></td>
+      <td><button class="del" data-del-dca="${r.id}" title="删除">✕</button></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('dcaBody').innerHTML = rows ||
+    `<tr><td colspan="7" class="empty">暂无定投记录</td></tr>`;
+
+  document.getElementById('dcaSum').innerHTML =
+    `<span>买入合计<b>¥${fmt(buySum)}</b></span>
+     <span>卖出合计<b>¥${fmt(sellSum)}</b></span>
+     <span>净投入<b>¥${fmt(buySum - sellSum)}</b></span>
+     <span>记录笔数<b>${list.length}</b></span>`;
+}
+
+/* 定投：自动计算交易金额 */
+function calcDcaAmount(){
+  const p = parseFloat(document.getElementById('dcaPrice').value) || 0;
+  const s = parseFloat(document.getElementById('dcaShares').value) || 0;
+  document.getElementById('dcaAmount').value = (p && s) ? (p*s).toFixed(2) : '';
+}
+document.getElementById('dcaPrice').addEventListener('input', calcDcaAmount);
+document.getElementById('dcaShares').addEventListener('input', calcDcaAmount);
+
+/* 定投：添加记录 */
+document.getElementById('dcaAdd').addEventListener('click', ()=>{
+  const date   = document.getElementById('dcaDate').value;
+  const type   = document.getElementById('dcaType').value;
+  const price  = parseFloat(document.getElementById('dcaPrice').value);
+  const shares = parseFloat(document.getElementById('dcaShares').value);
+  const dir    = document.getElementById('dcaDir').value;
+
+  if(!date){ toast('请选择日期'); return; }
+  if(isNaN(price) || price <= 0){ toast('请输入有效价格'); return; }
+  if(isNaN(shares) || shares <= 0){ toast('请输入有效份数'); return; }
+
+  db.dca.push({ id: Date.now(), date, type, price, shares, dir });
+  save();
+  renderDca();
+
+  document.getElementById('dcaPrice').value = '';
+  document.getElementById('dcaShares').value = '';
+  document.getElementById('dcaAmount').value = '';
+  toast('已添加');
+});
+
+/* 定投：删除记录 */
+document.getElementById('dcaBody').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-del-dca]');
+  if(!b) return;
+  const id = Number(b.dataset.delDca);
+  db.dca = db.dca.filter(r => r.id !== id);
+  save();
+  renderDca();
+});
+
+/* ==================== Tab 切换 ==================== */
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    state.tab = tab.dataset.tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === tab));
+    document.querySelectorAll('section[id^="page-"]').forEach(s=>{
+      s.style.display = (s.id === 'page-' + state.tab) ? '' : 'none';
+    });
+  });
+});
+
+/* ==================== 初始化 ==================== */
+(function init(){
+  load();
+
+  if(!Object.keys(db.assets).length){
+    ensureAssetMonth(curMonth());
+    save();
+  }
+
+  state.expenseMonth = curMonth();
+  document.getElementById('expenseMonth').value = state.expenseMonth;
+  document.getElementById('assetNewMonth').value = curMonth();
+  document.getElementById('dcaDate').value = todayStr();
+
+  renderExpense();
+  renderExpenseSummary();
+  renderAssets();
+  renderDca();
+})();
+</script>
+</body>
+</html>
