@@ -144,6 +144,13 @@ td.rate-cell.text-cell{color:#7b8794;font-size:12.5px;padding:9px 10px}
 .dca-sum{margin-top:10px;padding:11px 16px;background:#f7f9fc;border-radius:10px;font-size:13px;color:var(--muted);display:flex;gap:22px;flex-wrap:wrap}
 .dca-sum b{color:var(--text);font-variant-numeric:tabular-nums;margin-left:4px}
 
+/* 定投：编辑态提示 + 行高亮 */
+.dca-edit-hint{
+  margin:-2px 0 12px;padding:8px 12px;border-radius:8px;
+  background:#eef4ff;border:1px solid #d6e4ff;color:#2f6fed;font-size:12.5px;
+}
+#dcaBody tr.editing td{background:#eef4ff}
+
 /* ---------- 数据管理 ---------- */
 .overview{display:flex;gap:10px;flex-wrap:wrap}
 .ov-item{flex:1 1 120px;background:#f7f9fc;border-radius:10px;padding:12px 14px}
@@ -234,6 +241,8 @@ td.rate-cell.text-cell{color:#7b8794;font-size:12.5px;padding:9px 10px}
   .dca-form button{width:100%;padding:12px 0;font-size:15px}
   .dca-form .ro{font-size:15px}
   .dca-sum{gap:10px 18px;font-size:12.5px;line-height:1.9}
+  .op-cell button{padding:8px 12px;font-size:13.5px}
+  .op-cell .del{padding:8px 11px}
 
   /* 数据管理 */
   .ov-item{flex:1 1 100%}
@@ -352,10 +361,14 @@ td.rate-cell.text-cell{color:#7b8794;font-size:12.5px;padding:9px 10px}
           <option value="sell">卖出</option>
         </select>
         <button class="btn btn-primary" id="dcaAdd">添加记录</button>
+        <button class="btn" id="dcaCancel" style="display:none">取消编辑</button>
+      </div>
+      <div class="dca-edit-hint" id="dcaEditHint" style="display:none">
+        ✎ 正在编辑一条记录，修改后点击「保存修改」
       </div>
       <div class="mobile-only">左右滑动表格查看更多 →</div>
       <div class="scroll-x">
-        <table style="min-width:660px">
+        <table style="min-width:700px">
           <thead>
             <tr>
               <th>日期</th><th>类型</th><th>价格</th><th>份数</th>
@@ -722,6 +735,23 @@ document.getElementById('addAssetMonth').addEventListener('click', ()=>{
 });
 
 /* ==================== 定投管理 ==================== */
+/* 正在编辑的记录 ID，null 表示新增模式 */
+let dcaEditId = null;
+
+/* 重置表单到「新增模式」 */
+function dcaResetForm(){
+  dcaEditId = null;
+  document.getElementById('dcaDate').value   = todayStr();
+  document.getElementById('dcaType').value   = '宽基+股票';
+  document.getElementById('dcaPrice').value  = '';
+  document.getElementById('dcaShares').value = '';
+  document.getElementById('dcaAmount').value = '';
+  document.getElementById('dcaDir').value    = 'buy';
+  document.getElementById('dcaAdd').textContent = '添加记录';
+  document.getElementById('dcaCancel').style.display = 'none';
+  document.getElementById('dcaEditHint').style.display = 'none';
+}
+
 function renderDca(){
   const list = [...db.dca].sort((a,b)=>{
     if(a.date === b.date) return b.id - a.id;
@@ -732,14 +762,18 @@ function renderDca(){
   const rows = list.map(r=>{
     const amt = (Number(r.price)||0) * (Number(r.shares)||0);
     if(r.dir === 'buy') buySum += amt; else sellSum += amt;
-    return `<tr>
+    const editing = dcaEditId === r.id;
+    return `<tr data-id="${r.id}"${editing ? ' class="editing"' : ''}>
       <td>${esc(r.date)}</td>
       <td><span class="type-tag">${esc(r.type || '—')}</span></td>
       <td>${fmtNum(r.price,4)}</td>
       <td>${fmtNum(r.shares,2)}</td>
       <td class="total-cell">¥${fmt(amt)}</td>
       <td><span class="badge ${r.dir==='buy'?'buy':'sell'}">${r.dir==='buy'?'买入':'卖出'}</span></td>
-      <td><button class="del" data-del-dca="${r.id}" title="删除">✕</button></td>
+      <td class="op-cell">
+        <button class="btn-edit" data-edit-dca="${r.id}">编辑</button>
+        <button class="del" data-del-dca="${r.id}" title="删除">✕</button>
+      </td>
     </tr>`;
   }).join('');
 
@@ -761,34 +795,94 @@ function calcDcaAmount(){
 document.getElementById('dcaPrice').addEventListener('input', calcDcaAmount);
 document.getElementById('dcaShares').addEventListener('input', calcDcaAmount);
 
-document.getElementById('dcaAdd').addEventListener('click', ()=>{
+/* 读取并校验表单，返回 null 表示校验未通过 */
+function readDcaForm(){
   const date   = document.getElementById('dcaDate').value;
   const type   = document.getElementById('dcaType').value;
   const price  = parseFloat(document.getElementById('dcaPrice').value);
   const shares = parseFloat(document.getElementById('dcaShares').value);
   const dir    = document.getElementById('dcaDir').value;
 
-  if(!date){ toast('请选择日期'); return; }
-  if(isNaN(price) || price <= 0){ toast('请输入有效价格'); return; }
-  if(isNaN(shares) || shares <= 0){ toast('请输入有效份数'); return; }
+  if(!date){ toast('请选择日期'); return null; }
+  if(isNaN(price) || price < 0){ toast('请输入有效价格'); return null; }
+  if(isNaN(shares) || shares <= 0){ toast('请输入有效份数'); return null; }
 
-  db.dca.push({ id: Date.now(), date, type, price, shares, dir });
-  save();
-  renderDca();
+  return { date, type, price, shares, dir };
+}
 
-  document.getElementById('dcaPrice').value = '';
-  document.getElementById('dcaShares').value = '';
-  document.getElementById('dcaAmount').value = '';
-  toast('已添加');
+/* 添加 / 保存修改 */
+document.getElementById('dcaAdd').addEventListener('click', ()=>{
+  const v = readDcaForm();
+  if(!v) return;
+
+  if(dcaEditId != null){
+    /* —— 保存修改 —— */
+    const rec = db.dca.find(x => x.id === dcaEditId);
+    if(!rec){ dcaResetForm(); renderDca(); toast('该记录已不存在'); return; }
+    Object.assign(rec, v);
+    save();
+    dcaResetForm();
+    renderDca();
+    toast('已保存修改');
+  }else{
+    /* —— 新增记录 —— */
+    db.dca.push({ id: Date.now(), ...v });
+    save();
+    renderDca();
+    document.getElementById('dcaPrice').value  = '';
+    document.getElementById('dcaShares').value = '';
+    document.getElementById('dcaAmount').value = '';
+    document.getElementById('dcaPrice').focus();
+    toast('已添加');
+  }
 });
 
+/* 取消编辑 */
+document.getElementById('dcaCancel').addEventListener('click', ()=>{
+  dcaResetForm();
+  renderDca();
+  toast('已取消编辑');
+});
+
+/* 表格内：编辑 / 删除 */
 document.getElementById('dcaBody').addEventListener('click', e=>{
-  const b = e.target.closest('button[data-del-dca]');
-  if(!b) return;
-  const id = Number(b.dataset.delDca);
-  db.dca = db.dca.filter(r => r.id !== id);
+  /* ---------- 编辑：把记录回填到表单 ---------- */
+  const editBtn = e.target.closest('button[data-edit-dca]');
+  if(editBtn){
+    const id = Number(editBtn.dataset.editDca);
+    const r  = db.dca.find(x => x.id === id);
+    if(!r){ toast('记录不存在'); return; }
+
+    dcaEditId = id;
+    document.getElementById('dcaDate').value   = r.date || todayStr();
+    document.getElementById('dcaType').value   = r.type || '其他';
+    document.getElementById('dcaPrice').value  = r.price;
+    document.getElementById('dcaShares').value = r.shares;
+    document.getElementById('dcaDir').value    = r.dir === 'sell' ? 'sell' : 'buy';
+    calcDcaAmount();
+
+    document.getElementById('dcaAdd').textContent = '保存修改';
+    document.getElementById('dcaCancel').style.display = '';
+    document.getElementById('dcaEditHint').style.display = '';
+    renderDca();          /* 重新渲染以高亮当前编辑行 */
+    return;
+  }
+
+  /* ---------- 删除：二次确认 ---------- */
+  const delBtn = e.target.closest('button[data-del-dca]');
+  if(!delBtn) return;
+  const id = Number(delBtn.dataset.delDca);
+  const r  = db.dca.find(x => x.id === id);
+  if(!r) return;
+
+  const label = r.dir === 'buy' ? '买入' : '卖出';
+  if(!confirm(`确定删除 ${r.date} 的这条${label}记录吗？`)) return;
+
+  db.dca = db.dca.filter(x => x.id !== id);
+  if(dcaEditId === id) dcaResetForm();   /* 正在编辑的记录被删 → 退出编辑态 */
   save();
   renderDca();
+  toast('已删除');
 });
 
 /* ==================== 数据管理 ==================== */
@@ -959,6 +1053,7 @@ function doMergeImport(){
   try{
     const s = mergeImport(data);
     editingMonths.clear();
+    dcaResetForm();            /* 导入后退出定投编辑态，避免 id 错乱 */
     refreshAllViews();
     document.getElementById('importText').value = '';
     toast(`导入完成：支出 ${s.expMerged} 项 · 资产 ${s.assetMerged} 项 · 定投 ${s.dcaAdded} 笔` +
@@ -978,6 +1073,7 @@ function doClearAll(){
   state.expenseMonth = curMonth();
   document.getElementById('expenseMonth').value = state.expenseMonth;
   document.getElementById('assetNewMonth').value = curMonth();
+  dcaResetForm();
   refreshAllViews();
   toast('已清空所有数据');
 }
