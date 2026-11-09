@@ -132,7 +132,7 @@ td.rate-cell.text-cell{color:#7b8794;font-size:12.5px;padding:9px 10px}
 .op-cell{padding:8px 10px}
 .op-cell button + button{margin-left:6px}
 
-/* ---------- 定投 ---------- */
+/* ---------- 定投 / 定期存款 ---------- */
 .dca-form{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
 .dca-form>*{flex:1 1 110px;min-width:100px}
 .dca-form .ro{background:#f7f9fc;color:var(--muted)}
@@ -144,12 +144,13 @@ td.rate-cell.text-cell{color:#7b8794;font-size:12.5px;padding:9px 10px}
 .dca-sum{margin-top:10px;padding:11px 16px;background:#f7f9fc;border-radius:10px;font-size:13px;color:var(--muted);display:flex;gap:22px;flex-wrap:wrap}
 .dca-sum b{color:var(--text);font-variant-numeric:tabular-nums;margin-left:4px}
 
-/* 定投：编辑态提示 + 行高亮 */
+/* 编辑态提示 + 行高亮 */
 .dca-edit-hint{
   margin:-2px 0 12px;padding:8px 12px;border-radius:8px;
   background:#eef4ff;border:1px solid #d6e4ff;color:#2f6fed;font-size:12.5px;
 }
 #dcaBody tr.editing td{background:#eef4ff}
+#depBody tr.editing td{background:#eef4ff}
 
 /* ---------- 数据管理 ---------- */
 .overview{display:flex;gap:10px;flex-wrap:wrap}
@@ -236,7 +237,7 @@ td.rate-cell.text-cell{color:#7b8794;font-size:12.5px;padding:9px 10px}
   /* 资产操作按钮放大 */
   .btn-edit,.btn-save,.btn-cancel{padding:9px 14px;font-size:13.5px}
 
-  /* 定投 */
+  /* 定投 / 定期存款 */
   .dca-form>*{flex:1 1 100%;min-width:0}
   .dca-form button{width:100%;padding:12px 0;font-size:15px}
   .dca-form .ro{font-size:15px}
@@ -303,6 +304,42 @@ td.rate-cell.text-cell{color:#7b8794;font-size:12.5px;padding:9px 10px}
 
   <!-- ================= 资产管理 ================= -->
   <section id="page-asset" style="display:none">
+
+    <!-- 定期存款维护 -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">定期存款维护 <small>到期利息 = 本金 × 年利率 × 期限</small></div>
+      </div>
+      <div class="dca-form">
+        <input type="date" id="depDue" title="到期日" aria-label="到期日">
+        <input type="number" id="depRate" step="0.0001" min="0" placeholder="年利率 %">
+        <input type="number" id="depYears" step="0.01" min="0" placeholder="期限（年）">
+        <input type="number" id="depPrincipal" step="0.01" min="0" placeholder="本金">
+        <button class="btn btn-primary" id="depAdd">添加记录</button>
+        <button class="btn" id="depCancel" style="display:none">取消编辑</button>
+      </div>
+      <div class="dca-edit-hint" id="depEditHint" style="display:none">
+        ✎ 正在编辑一条定期存款记录，修改后点击「保存修改」
+      </div>
+      <div class="mobile-only">左右滑动表格查看更多 →</div>
+      <div class="scroll-x">
+        <table style="min-width:660px">
+          <thead>
+            <tr>
+              <th>到期日</th>
+              <th>年利率</th>
+              <th>期限（年）</th>
+              <th>本金</th>
+              <th>到期利息</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="depBody"></tbody>
+        </table>
+      </div>
+      <div class="dca-sum" id="depSum"></div>
+    </div>
+
     <div class="card">
       <div class="card-head">
         <div class="card-title">资产月度台账 <small>默认展示 · 点击「编辑」后可修改</small></div>
@@ -393,7 +430,7 @@ td.rate-cell.text-cell{color:#7b8794;font-size:12.5px;padding:9px 10px}
 
     <div class="card">
       <div class="card-head">
-        <div class="card-title">导出数据 <small>包含支出、资产、定投全部数据</small></div>
+        <div class="card-title">导出数据 <small>包含支出、资产、定期存款、定投全部数据</small></div>
       </div>
       <textarea id="exportText" rows="10" readonly spellcheck="false"></textarea>
       <div class="dm-row">
@@ -410,7 +447,7 @@ td.rate-cell.text-cell{color:#7b8794;font-size:12.5px;padding:9px 10px}
       <textarea id="importText" rows="8" placeholder="在此粘贴导出的 JSON 文本…" spellcheck="false"></textarea>
       <p class="dm-note">
         <b>合并规则：</b>支出按月-分类累加金额，备注以导入为准；资产按月-栏位用导入的非零值覆盖；
-        定投按记录 ID 去重追加。导入不会删除本地已有数据。
+        定期存款与定投按记录 ID 去重追加。导入不会删除本地已有数据。
       </p>
       <div class="dm-row">
         <button class="btn btn-primary" id="btnMergeImport">合并导入</button>
@@ -421,7 +458,7 @@ td.rate-cell.text-cell{color:#7b8794;font-size:12.5px;padding:9px 10px}
       <div class="card-head">
         <div class="card-title">清空数据 <small>危险操作，请谨慎</small></div>
       </div>
-      <p class="dm-note">将删除本机浏览器中保存的全部支出、资产与定投记录，且无法恢复。</p>
+      <p class="dm-note">将删除本机浏览器中保存的全部支出、资产、定期存款与定投记录，且无法恢复。</p>
       <div class="dm-row">
         <button class="btn danger-btn" id="btnClearAll">清空所有数据</button>
       </div>
@@ -457,7 +494,7 @@ const ASSET_COLS = [
 const DB_KEY = 'money_tool_v1';
 
 /* ==================== 数据层 ==================== */
-let db = { expenses:{}, assets:{}, dca:[] };
+let db = { expenses:{}, assets:{}, dca:[], deposits:[] };
 
 function load(){
   try{
@@ -466,7 +503,8 @@ function load(){
       const p = JSON.parse(raw);
       db.expenses = p.expenses || {};
       db.assets   = p.assets   || {};
-      db.dca      = p.dca      || [];
+      db.dca      = Array.isArray(p.dca) ? p.dca : [];
+      db.deposits = Array.isArray(p.deposits) ? p.deposits : [];
     }
   }catch(e){ console.warn('读取本地数据失败', e); }
 }
@@ -601,6 +639,196 @@ document.getElementById('expenseList').addEventListener('input', e=>{
 document.getElementById('expenseMonth').addEventListener('change', e=>{
   state.expenseMonth = e.target.value || curMonth();
   renderExpense();
+});
+
+/* ==================== 定期存款维护 ==================== */
+let depEditId = null;
+
+/* 日期工具：加/减月份（自动处理月末溢出） */
+function addMonths(date, n){
+  const day = date.getDate();
+  const r = new Date(date.getFullYear(), date.getMonth() + n, 1);
+  const dim = new Date(r.getFullYear(), r.getMonth() + 1, 0).getDate();
+  r.setDate(Math.min(day, dim));
+  return r;
+}
+function monthDiff(from, to){
+  let m = (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth());
+  if(to.getDate() < from.getDate()) m--;
+  return m;
+}
+function parseDateStr(s){
+  if(!s) return null;
+  const p = String(s).split('-').map(Number);
+  if(p.length !== 3 || !p[0] || !p[1] || !p[2]) return null;
+  const d = new Date(p[0], p[1]-1, p[2]);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+/* 截至 statDate 所在月末，该笔存款已计息的月数（不超过总期限月数） */
+function depositElapsedMonths(rec, statDate){
+  const due = parseDateStr(rec.dueDate);
+  if(!due) return 0;
+  const totalMonths = Math.round((Number(rec.years) || 0) * 12);
+  if(totalMonths <= 0) return 0;
+  const start = addMonths(due, -totalMonths);          // 起息日 = 到期日 - 期限
+  const monthEnd = new Date(statDate.getFullYear(), statDate.getMonth() + 1, 0);
+  const cutoff = monthEnd < due ? monthEnd : due;
+  let m = monthDiff(start, cutoff);
+  if(m < 0) m = 0;
+  if(m > totalMonths) m = totalMonths;
+  return m;
+}
+
+function renderDeposits(){
+  if(!Array.isArray(db.deposits)) db.deposits = [];
+
+  const list = [...db.deposits].sort((a, b)=>{
+    const dueA = a.dueDate || '';
+    const dueB = b.dueDate || '';
+    if(dueA === dueB) return (b.id || 0) - (a.id || 0);
+    return dueA < dueB ? -1 : 1;
+  });
+
+  const statDate = new Date();               // 「当月」= 当前自然月
+  const ym = statDate.getFullYear() + '-' + pad2(statDate.getMonth() + 1);
+
+  let sumPrincipal = 0;      // 本金合计
+  let sumInterest  = 0;      // 到期利息合计
+  let sumMonthInt  = 0;      // Σ(年利率/12 × 本金)
+  let sumAccrued   = 0;      // 当月已计本息和
+
+  const rows = list.map(r=>{
+    const principal = Number(r.principal) || 0;
+    const rate      = Number(r.rate) || 0;
+    const years     = Number(r.years) || 0;
+    const interest  = principal * (rate / 100) * years;   // 到期利息
+
+    sumPrincipal += principal;
+    sumInterest  += interest;
+    sumMonthInt  += (rate / 12) * principal;              // 年利率为百分数，/12 即月利率百分数
+
+    const elapsed = depositElapsedMonths(r, statDate);
+    sumAccrued += principal + principal * (rate / 100 / 12) * elapsed;
+
+    const editing = depEditId === r.id;
+    return `<tr data-dep-id="${r.id}"${editing ? ' class="editing"' : ''}>
+      <td class="month-cell">${esc(r.dueDate || '—')}</td>
+      <td>${fmtNum(rate, 4)}%</td>
+      <td>${fmtNum(years, 2)}</td>
+      <td>¥${fmt(principal)}</td>
+      <td class="total-cell">¥${fmt(interest)}</td>
+      <td class="op-cell">
+        <button class="btn-edit" data-edit-dep="${r.id}">编辑</button>
+        <button class="del" data-del-dep="${r.id}" title="删除">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('depBody').innerHTML = rows ||
+    `<tr><td colspan="6" class="empty">暂无定期存款记录</td></tr>`;
+
+  const monthRate = sumPrincipal > 0 ? (sumMonthInt / sumPrincipal) : 0;
+
+  document.getElementById('depSum').innerHTML =
+    `<span>本金合计<b>¥${fmt(sumPrincipal)}</b></span>
+     <span>当月（${ym}）收益率<b>${fmtNum(monthRate, 4)}%</b></span>
+     <span>当月已计本息和<b>¥${fmt(sumAccrued)}</b></span>
+     <span>预期所有本息和<b>¥${fmt(sumPrincipal + sumInterest)}</b></span>
+     <span>存款笔数<b>${list.length}</b></span>`;
+}
+
+function depResetForm(){
+  depEditId = null;
+  document.getElementById('depDue').value = '';
+  document.getElementById('depRate').value = '';
+  document.getElementById('depYears').value = '';
+  document.getElementById('depPrincipal').value = '';
+  document.getElementById('depAdd').textContent = '添加记录';
+  document.getElementById('depCancel').style.display = 'none';
+  document.getElementById('depEditHint').style.display = 'none';
+}
+
+function readDepForm(){
+  const dueDate   = document.getElementById('depDue').value;
+  const rate      = parseFloat(document.getElementById('depRate').value);
+  const years     = parseFloat(document.getElementById('depYears').value);
+  const principal = parseFloat(document.getElementById('depPrincipal').value);
+
+  if(!dueDate){ toast('请选择到期日'); return null; }
+  if(isNaN(rate) || rate < 0){ toast('请输入有效年利率'); return null; }
+  if(isNaN(years) || years <= 0){ toast('请输入有效期限'); return null; }
+  if(isNaN(principal) || principal <= 0){ toast('请输入有效本金'); return null; }
+
+  return { dueDate, rate, years, principal };
+}
+
+/* 添加 / 保存修改 */
+document.getElementById('depAdd').addEventListener('click', ()=>{
+  const v = readDepForm();
+  if(!v) return;
+
+  if(depEditId != null){
+    const rec = db.deposits.find(x => x.id === depEditId);
+    if(!rec){ depResetForm(); renderDeposits(); toast('该记录已不存在'); return; }
+    Object.assign(rec, v);
+    save();
+    depResetForm();
+    renderDeposits();
+    toast('已保存修改');
+  }else{
+    db.deposits.push({ id: Date.now(), ...v });
+    save();
+    renderDeposits();
+    document.getElementById('depRate').value = '';
+    document.getElementById('depYears').value = '';
+    document.getElementById('depPrincipal').value = '';
+    document.getElementById('depDue').focus();
+    toast('已添加');
+  }
+});
+
+/* 取消编辑 */
+document.getElementById('depCancel').addEventListener('click', ()=>{
+  depResetForm();
+  renderDeposits();
+  toast('已取消编辑');
+});
+
+/* 表格内：编辑 / 删除 */
+document.getElementById('depBody').addEventListener('click', e=>{
+  const editBtn = e.target.closest('button[data-edit-dep]');
+  if(editBtn){
+    const id = Number(editBtn.dataset.editDep);
+    const r  = db.deposits.find(x => x.id === id);
+    if(!r){ toast('记录不存在'); return; }
+
+    depEditId = id;
+    document.getElementById('depDue').value       = r.dueDate || '';
+    document.getElementById('depRate').value      = r.rate;
+    document.getElementById('depYears').value     = r.years;
+    document.getElementById('depPrincipal').value = r.principal;
+
+    document.getElementById('depAdd').textContent = '保存修改';
+    document.getElementById('depCancel').style.display = '';
+    document.getElementById('depEditHint').style.display = '';
+    renderDeposits();
+    return;
+  }
+
+  const delBtn = e.target.closest('button[data-del-dep]');
+  if(!delBtn) return;
+  const id = Number(delBtn.dataset.delDep);
+  const r  = db.deposits.find(x => x.id === id);
+  if(!r) return;
+
+  if(!confirm(`确定删除 ${r.dueDate || ''} 到期的这笔定期存款记录吗？`)) return;
+
+  db.deposits = db.deposits.filter(x => x.id !== id);
+  if(depEditId === id) depResetForm();
+  save();
+  renderDeposits();
+  toast('已删除');
 });
 
 /* ==================== 资产管理 ==================== */
@@ -889,10 +1117,11 @@ document.getElementById('dcaBody').addEventListener('click', e=>{
 function buildExportData(){
   return {
     app: 'money-tool',
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     expenses: db.expenses,
     assets: db.assets,
+    deposits: db.deposits,
     dca: db.dca
   };
 }
@@ -920,10 +1149,12 @@ function renderDataMgmt(){
   }).length;
 
   const dcaCount = db.dca.length;
+  const depCount = (db.deposits || []).length;
 
   document.getElementById('dataOverview').innerHTML = `
     <div class="ov-item"><div class="k">支出记录</div><div class="v">${expMonths}<small>个月</small></div></div>
     <div class="ov-item"><div class="k">资产台账</div><div class="v">${assetMonths}<small>个月</small></div></div>
+    <div class="ov-item"><div class="k">定期存款</div><div class="v">${depCount}<small>笔</small></div></div>
     <div class="ov-item"><div class="k">定投记录</div><div class="v">${dcaCount}<small>笔</small></div></div>
   `;
 
@@ -967,7 +1198,7 @@ function doDownloadExport(){
 }
 
 function mergeImport(data){
-  const stats = { expMerged:0, assetMerged:0, dcaAdded:0, dcaSkipped:0 };
+  const stats = { expMerged:0, assetMerged:0, dcaAdded:0, dcaSkipped:0, depAdded:0, depSkipped:0 };
 
   if(data.expenses && typeof data.expenses === 'object'){
     Object.keys(data.expenses).forEach(m=>{
@@ -1009,6 +1240,26 @@ function mergeImport(data){
     });
   }
 
+  if(Array.isArray(data.deposits)){
+    if(!Array.isArray(db.deposits)) db.deposits = [];
+    const ids = new Set(db.deposits.map(r => r.id));
+    data.deposits.forEach(r=>{
+      if(!r || typeof r !== 'object') return;
+      let id = Number(r.id);
+      if(!id) id = Date.now() + Math.floor(Math.random()*1000);
+      if(ids.has(id)){ stats.depSkipped++; return; }
+      db.deposits.push({
+        id,
+        dueDate:   r.dueDate || '',
+        rate:      Number(r.rate)      || 0,
+        years:     Number(r.years)     || 0,
+        principal: Number(r.principal) || 0
+      });
+      ids.add(id);
+      stats.depAdded++;
+    });
+  }
+
   if(Array.isArray(data.dca)){
     const ids = new Set(db.dca.map(r => r.id));
     data.dca.forEach(r=>{
@@ -1044,8 +1295,8 @@ function doMergeImport(){
   if(!data || typeof data !== 'object' || Array.isArray(data)){
     toast('数据格式无效，需要导出的对象格式'); return;
   }
-  if(!data.expenses && !data.assets && !data.dca){
-    toast('未找到可导入的字段（expenses / assets / dca）'); return;
+  if(!data.expenses && !data.assets && !data.dca && !data.deposits){
+    toast('未找到可导入的字段（expenses / assets / deposits / dca）'); return;
   }
 
   if(!confirm('确定将以上数据合并到本地吗？本地已有数据不会被删除。')) return;
@@ -1054,10 +1305,14 @@ function doMergeImport(){
     const s = mergeImport(data);
     editingMonths.clear();
     dcaResetForm();            /* 导入后退出定投编辑态，避免 id 错乱 */
+    depResetForm();            /* 同样退出定期存款编辑态 */
     refreshAllViews();
     document.getElementById('importText').value = '';
-    toast(`导入完成：支出 ${s.expMerged} 项 · 资产 ${s.assetMerged} 项 · 定投 ${s.dcaAdded} 笔` +
-          (s.dcaSkipped ? `（跳过重复 ${s.dcaSkipped} 笔）` : ''));
+    let msg = `导入完成：支出 ${s.expMerged} 项 · 资产 ${s.assetMerged} 项 · 定期存款 ${s.depAdded} 笔 · 定投 ${s.dcaAdded} 笔`;
+    if(s.depSkipped || s.dcaSkipped){
+      msg += `（跳过重复：定期 ${s.depSkipped} 笔 · 定投 ${s.dcaSkipped} 笔）`;
+    }
+    toast(msg);
   }catch(e){
     toast('导入失败：' + e.message);
   }
@@ -1065,15 +1320,16 @@ function doMergeImport(){
 
 function doClearAll(){
   if(!confirm('确定清空全部数据吗？此操作不可恢复。')) return;
-  if(!confirm('再次确认：真的要删除所有支出、资产、定投记录吗？')) return;
+  if(!confirm('再次确认：真的要删除所有支出、资产、定期存款、定投记录吗？')) return;
 
-  db = { expenses:{}, assets:{}, dca:[] };
+  db = { expenses:{}, assets:{}, dca:[], deposits:[] };
   editingMonths.clear();
   save();
   state.expenseMonth = curMonth();
   document.getElementById('expenseMonth').value = state.expenseMonth;
   document.getElementById('assetNewMonth').value = curMonth();
   dcaResetForm();
+  depResetForm();
   refreshAllViews();
   toast('已清空所有数据');
 }
@@ -1091,6 +1347,7 @@ document.getElementById('btnClearAll').addEventListener('click', doClearAll);
 function refreshAllViews(){
   renderExpense();
   renderExpenseSummary();
+  renderDeposits();
   renderAssets();
   renderDca();
   renderDataMgmt();
@@ -1112,6 +1369,8 @@ document.querySelectorAll('.tab').forEach(tab=>{
 (function init(){
   load();
 
+  if(!Array.isArray(db.deposits)) db.deposits = [];
+
   if(!Object.keys(db.assets).length){
     ensureAssetMonth(curMonth());
     editingMonths.add(curMonth());
@@ -1125,6 +1384,7 @@ document.querySelectorAll('.tab').forEach(tab=>{
 
   renderExpense();
   renderExpenseSummary();
+  renderDeposits();
   renderAssets();
   renderDca();
   renderDataMgmt();
