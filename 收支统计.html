@@ -176,6 +176,46 @@ td.rate-cell.text-cell{color:#7b8794;font-size:12.5px;padding:9px 10px}
 }
 #toast.show{opacity:1;transform:translate(-50%,0)}
 
+/* ---------- 登录墙 / 用户区 / 迁移条 / 加载 / 离线 ---------- */
+#loginWall{
+  position:fixed;inset:0;background:var(--bg);z-index:50;
+  align-items:center;justify-content:center;padding:20px;display:none;
+}
+body.logged-out #loginWall{display:flex}
+body.logged-out .app{display:none}
+.login-card{
+  background:var(--card);border-radius:16px;padding:34px 28px;max-width:380px;width:100%;
+  box-shadow:0 8px 30px rgba(16,24,40,.08);text-align:center;
+}
+.login-card h2{font-size:20px;margin:0 0 10px}
+.login-desc{font-size:13px;color:var(--muted);line-height:1.7;margin:0 0 20px}
+.login-note{font-size:12px;color:var(--muted);margin:14px 0 0}
+#btnGoogleLogin{width:100%;padding:12px 0;font-size:15px}
+.user-bar{display:flex;align-items:center;gap:8px;margin-top:10px}
+.user-bar span{font-size:12.5px;color:var(--muted);word-break:break-all}
+.user-bar .btn{padding:5px 12px;font-size:12.5px}
+#migrateBar{
+  position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:#fff7e8;border:1px solid #f5dfae;color:#8a6116;padding:10px 16px;border-radius:10px;
+  margin-bottom:14px;font-size:13px;
+}
+#migrateBar span{flex:1 1 240px}
+#migrateBar .btn{padding:6px 14px}
+#loading{
+  position:fixed;inset:0;background:rgba(255,255,255,.85);z-index:60;
+  flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  color:var(--muted);font-size:14px;display:none;
+}
+.spinner{
+  width:28px;height:28px;border:3px solid #dbe3f0;border-top-color:var(--primary);
+  border-radius:50%;animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+#offlineBar{
+  position:sticky;top:0;z-index:40;background:#fdeeee;color:#d94a4a;
+  padding:8px 16px;border-radius:10px;margin-bottom:14px;font-size:13px;text-align:center;
+}
+
 /* ==================== 响应式：平板 ==================== */
 @media (max-width: 900px){
   .app{padding:18px 12px 64px}
@@ -260,11 +300,39 @@ td.rate-cell.text-cell{color:#7b8794;font-size:12.5px;padding:9px 10px}
 }
 </style>
 </head>
-<body>
+<body class="logged-out">
+
+<!-- 登录墙 -->
+<div id="loginWall">
+  <div class="login-card">
+    <h2>💰 收支统计小工具</h2>
+    <p class="login-desc">数据已迁移至云端存储（Firestore）。登录后多设备自动同步，浏览器清除数据不再丢失。</p>
+    <button class="btn btn-primary" id="btnGoogleLogin">使用 Google 账号登录</button>
+    <p class="login-note">仅你本人的 Google 账号可访问自己的数据</p>
+  </div>
+</div>
+
+<!-- 旧数据迁移提示条 -->
+<div id="migrateBar" style="display:none">
+  <span>检测到本机浏览器中有旧版数据，是否合并上传到云端？</span>
+  <button class="btn btn-primary" id="btnMigrateYes">合并上传</button>
+  <button class="btn" id="btnMigrateNo">丢弃本地</button>
+</div>
+
+<!-- 加载遮罩 -->
+<div id="loading" style="display:none"><div class="spinner"></div><span>加载中…</span></div>
+
+<!-- 离线提示条 -->
+<div id="offlineBar" style="display:none">当前离线，数据将在联网后自动同步</div>
+
 <div class="app">
   <header>
     <h1>💰 收支统计小工具</h1>
-    <p>数据保存在本机浏览器（localStorage），不上传任何服务器</p>
+    <p>数据加密存储于云端（Firestore），仅本人账号可访问 · 多设备自动同步</p>
+    <div class="user-bar" id="userBar" style="display:none">
+      <span id="userEmail"></span>
+      <button class="btn" id="btnLogout">退出登录</button>
+    </div>
   </header>
 
   <div class="tabs">
@@ -447,7 +515,7 @@ td.rate-cell.text-cell{color:#7b8794;font-size:12.5px;padding:9px 10px}
       <textarea id="importText" rows="8" placeholder="在此粘贴导出的 JSON 文本…" spellcheck="false"></textarea>
       <p class="dm-note">
         <b>合并规则：</b>支出按月-分类累加金额，备注以导入为准；资产按月-栏位用导入的非零值覆盖；
-        定期存款与定投按记录 ID 去重追加。导入不会删除本地已有数据。
+        定期存款与定投按记录 ID 去重追加。导入不会删除云端已有数据。
       </p>
       <div class="dm-row">
         <button class="btn btn-primary" id="btnMergeImport">合并导入</button>
@@ -458,7 +526,7 @@ td.rate-cell.text-cell{color:#7b8794;font-size:12.5px;padding:9px 10px}
       <div class="card-head">
         <div class="card-title">清空数据 <small>危险操作，请谨慎</small></div>
       </div>
-      <p class="dm-note">将删除本机浏览器中保存的全部支出、资产、定期存款与定投记录，且无法恢复。</p>
+      <p class="dm-note">将删除云端中保存的全部支出、资产、定期存款与定投记录，且无法恢复。</p>
       <div class="dm-row">
         <button class="btn danger-btn" id="btnClearAll">清空所有数据</button>
       </div>
@@ -467,6 +535,12 @@ td.rate-cell.text-cell{color:#7b8794;font-size:12.5px;padding:9px 10px}
 </div>
 
 <div id="toast"></div>
+
+<!-- Firebase SDK (compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-check-compat.js"></script>
 
 <script>
 /* ==================== 常量 ==================== */
@@ -491,27 +565,290 @@ const ASSET_COLS = [
   {key:'current',name:'活期',      cls:'cash'}
 ];
 
-const DB_KEY = 'money_tool_v1';
+/* ==================== Firebase 配置（Firebase 控制台 → 项目设置 → 常规 → Web 应用） ==================== */
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyAHMnTKFcy2l_YvWTDVCcRddMtXIrXf-7A",
+  authDomain:        "html-tools-fc4b1.firebaseapp.com",
+  projectId:         "html-tools-fc4b1",
+  storageBucket:     "html-tools-fc4b1.firebasestorage.app",
+  messagingSenderId: "1033114571343",
+  appId:             "1:1033114571343:web:087d8c5c31db1c1640903a"
+};
+
+/* 旧版 localStorage 数据 key（仅用于存量数据迁移检测） */
+const LEGACY_KEY = 'money_tool_v1';
+
+/* ==================== Firebase 初始化 ==================== */
+firebase.initializeApp(FIREBASE_CONFIG);
+
+/* App Check：Firestore 已开启强制执行（Enforced），必须先激活再发起任何 Firestore 请求。
+   site key 来自 Firebase 控制台 → App Check → 注册 Web 应用（reCAPTCHA v3）。 */
+//const appCheck = firebase.appCheck();
+//appCheck.activate('6Le3sxkuAAAAAL_Rka-RKGQ3m5RmM0Hp-iIuDM8V', true);   /* TODO: 替换为 reCAPTCHA v3 Site Key */
+
+const auth = firebase.auth();
+const fdb  = firebase.firestore();
+fdb.enablePersistence({ synchronizeTabs: true }).catch(e=>console.warn('离线持久化不可用', e));
 
 /* ==================== 数据层 ==================== */
+/* 内存镜像：业务代码直接读写 db，值由云端驱动 */
 let db = { expenses:{}, assets:{}, dca:[], deposits:[] };
 
-function load(){
-  try{
-    const raw = localStorage.getItem(DB_KEY);
-    if(raw){
-      const p = JSON.parse(raw);
-      db.expenses = p.expenses || {};
-      db.assets   = p.assets   || {};
-      db.dca      = Array.isArray(p.dca) ? p.dca : [];
-      db.deposits = Array.isArray(p.deposits) ? p.deposits : [];
+const MODULES = ['expenses', 'assets', 'dca', 'deposits'];
+
+const ARRAY_MODULES = ['dca', 'deposits'];
+
+function defaultModule(name){
+  return ARRAY_MODULES.includes(name) ? [] : {};
+}
+
+/* 云文档内容 ↔ 内存镜像转换：Firestore 文档顶层必须是对象，
+   数组模块（dca/deposits）以 { items: [...] } 形式存储 */
+function moduleToCloud(name){
+  return ARRAY_MODULES.includes(name) ? { items: db[name] } : db[name];
+}
+function cloudToModule(name, data){
+  if(data == null) return defaultModule(name);
+  if(ARRAY_MODULES.includes(name)){
+    if(Array.isArray(data.items)) return data.items;
+    if(Array.isArray(data)) return data;   /* 兼容可能存在的旧裸数组文档 */
+    return [];
+  }
+  return data;
+}
+function moduleRef(name){
+  return fdb.collection('users').doc(auth.currentUser.uid).collection('data').doc(name);
+}
+
+/* 读取云端 4 个文档到 db；不存在则创建空文档 */
+async function loadCloud(){
+  const results = await Promise.all(MODULES.map(n => moduleRef(n).get()));
+  results.forEach((doc, i)=>{
+    const name = MODULES[i];
+    if(doc.exists){
+      db[name] = cloudToModule(name, doc.data());
+    }else{
+      db[name] = defaultModule(name);
+      moduleRef(name).set(moduleToCloud(name)).catch(e=>console.warn('创建空文档失败', name, e));
     }
-  }catch(e){ console.warn('读取本地数据失败', e); }
+  });
+  if(!Array.isArray(db.dca))      db.dca      = [];
+  if(!Array.isArray(db.deposits)) db.deposits = [];
 }
-function save(){
-  try{ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
-  catch(e){ toast('保存失败：' + e.message); }
+
+/* 模块级全量写云端 */
+function saveModule(name){
+  if(!auth.currentUser){
+    return Promise.reject(Object.assign(new Error('未登录'), {code:'unauthenticated'}));
+  }
+  return moduleRef(name).set(moduleToCloud(name)).catch(e=>{
+    if(e.code === 'permission-denied'){
+      toast('同步失败：登录已过期，请重新登录');
+    }else{
+      toast('同步失败：' + (e.message || e.code));
+    }
+    throw e;
+  });
 }
+
+/* 四个模块一次性原子写入（批量提交，避免部分成功） */
+function saveAllModules(){
+  if(!auth.currentUser){
+    return Promise.reject(Object.assign(new Error('未登录'), {code:'unauthenticated'}));
+  }
+  const batch = fdb.batch();
+  MODULES.forEach(n=>batch.set(moduleRef(n), moduleToCloud(n)));
+  return batch.commit().catch(e=>{
+    if(e.code === 'permission-denied'){
+      toast('同步失败：登录已过期，请重新登录');
+    }else{
+      toast('同步失败：' + (e.message || e.code));
+    }
+    throw e;
+  });
+}
+
+/* 云端是否有实质数据（判定口径同 renderDataMgmt 的非空口径） */
+function hasCloudData(){
+  return MODULES.some(name=>{
+    if(name === 'dca' || name === 'deposits') return db[name].length > 0;
+    const d = db[name] || {};
+    if(name === 'expenses'){
+      return Object.keys(d).some(m=>CATS.some(c=>{
+        const r = (d[m]||{})[c.key];
+        return r && ((Number(r.amount)||0)!==0 || (r.note||'')!=='');
+      }));
+    }
+    return Object.keys(d).some(m=>ASSET_COLS.some(a=>{
+      const r = (d[m]||{})[a.key];
+      return r && ((Number(r.amount)||0)!==0 || (Number(r.rate)||0)!==0);
+    }));
+  });
+}
+
+/* 渲染指定模块的视图 */
+function renderModule(name){
+  if(name === 'expenses'){ renderExpense(); renderExpenseSummary(); }
+  else if(name === 'assets')   renderAssets();
+  else if(name === 'dca')      renderDca();
+  else if(name === 'deposits') renderDeposits();
+  renderDataMgmt();
+}
+
+/* 实时同步：4 个文档分别监听；值无变化时跳过重渲染 */
+let unsubs = [];
+/* 键序无关的 JSON 序列化（Firestore 不保证字段顺序，避免快照误判触发重渲染） */
+function stableJson(v){
+  return JSON.stringify(v, (k, val)=>{
+    if(val && typeof val === 'object' && !Array.isArray(val)){
+      return Object.keys(val).sort().reduce((o, key)=>{ o[key] = val[key]; return o; }, {});
+    }
+    return val;
+  });
+}
+function mountListeners(){
+  unsubs.forEach(u=>u());
+  unsubs = MODULES.map(name=>{
+    return moduleRef(name).onSnapshot(doc=>{
+      const data = doc.exists ? cloudToModule(name, doc.data()) : defaultModule(name);
+      if(stableJson(data) === stableJson(db[name])) return;
+      db[name] = data;
+      renderModule(name);
+    }, err=>{ console.warn('监听中断', name, err.code); });
+  });
+}
+
+/* ==================== 认证流程 ==================== */
+function showLoading(show){
+  document.getElementById('loading').style.display = show ? 'flex' : 'none';
+}
+function showUserBar(user){
+  document.getElementById('userBar').style.display = 'flex';
+  document.getElementById('userEmail').textContent = user.email || '';
+}
+
+let entering = false;
+/* 登录成功后的主流程：读云端 → 挂监听 → 迁移检测 → 渲染 */
+async function enterApp(user){
+  if(entering) return;
+  entering = true;
+  showLoading(true);
+  try{
+    /* App Check 强制执行下，token 未就绪时发起的 Firestore 请求会被直接拒绝。
+       登录弹窗期间 token 通常已获取，此处显式等待以消除竞态。 */
+//    await appCheck.getToken();
+    await loadCloud();
+    legacyMerged = false;                   /* db 已重载，合并标记随当前内存数据重置 */
+    if(auth.currentUser !== user) return;   /* 等待期间已在其他标签页退出 */
+    mountListeners();
+    if(!Object.keys(db.assets).length){
+      ensureAssetMonth(curMonth());
+      editingMonths.add(curMonth());
+      saveModule('assets').catch(()=>{});   /* 不阻塞登录；离线时由持久化队列兜底 */
+    }
+    document.body.classList.remove('logged-out');
+    showUserBar(user);
+    if(hasLocalLegacy() && !hasCloudData()) showMigrateBar();
+    refreshAllViews();
+  }catch(e){
+    console.error('初始化失败', e);
+    toast('初始化失败：' + (e.message || e));
+  }finally{
+    showLoading(false);
+    entering = false;
+  }
+}
+
+function showLogin(){
+  unsubs.forEach(u=>u());
+  unsubs = [];
+  hideMigrateBar();
+  editingMonths.clear();
+  depResetForm();
+  dcaResetForm();
+  document.body.classList.add('logged-out');
+  document.getElementById('userBar').style.display = 'none';
+}
+
+auth.onAuthStateChanged(user=>{
+  if(user) enterApp(user); else showLogin();
+});
+
+document.getElementById('btnGoogleLogin').addEventListener('click', async ()=>{
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try{
+    await auth.signInWithPopup(provider);
+    if(auth.currentUser) enterApp(auth.currentUser);
+  }catch(e){
+    if(e.code !== 'auth/popup-closed-by-user'){
+      toast('登录失败：' + e.message);
+    }
+  }
+});
+
+document.getElementById('btnLogout').addEventListener('click', ()=>{
+  auth.signOut()
+    .then(()=>toast('已退出登录'))
+    .catch(e=>toast('退出失败：' + e.message));
+});
+
+/* ==================== 旧数据迁移（localStorage → 云端） ==================== */
+function hasLocalLegacy(){
+  try{ return !!localStorage.getItem(LEGACY_KEY); }
+  catch(e){ return false; }
+}
+function showMigrateBar(){ document.getElementById('migrateBar').style.display = 'flex'; }
+function hideMigrateBar(){ document.getElementById('migrateBar').style.display = 'none'; }
+
+let migrating = false;
+let legacyMerged = false;
+document.getElementById('btnMigrateYes').addEventListener('click', async ()=>{
+  if(migrating) return;
+  migrating = true;
+  document.getElementById('btnMigrateYes').disabled = true;
+  document.getElementById('btnMigrateNo').disabled = true;
+
+  try{
+    let legacy = null;
+    try{ legacy = JSON.parse(localStorage.getItem(LEGACY_KEY) || 'null'); }
+    catch(e){ legacy = null; }
+
+    if(!legacyMerged && legacy && typeof legacy === 'object' && !Array.isArray(legacy)){
+      mergeImport(legacy);   /* 复用导入合并规则（支出累加/资产覆盖/定投定期按 ID 去重） */
+      legacyMerged = true;
+    }
+
+    try{
+      await saveAllModules();
+      await fdb.waitForPendingWrites();   /* 确保写入到达服务器后再删旧 key */
+      localStorage.removeItem(LEGACY_KEY);
+      hideMigrateBar();
+      refreshAllViews();
+      toast('本地数据已合并上传到云端');
+    }catch(e){
+      /* saveModule 内部已 toast 具体错误；旧 key 保留，下次登录会再次提示 */
+      toast('上传失败，本地数据未删除，下次登录将再次提示');
+    }
+  }finally{
+    migrating = false;
+    document.getElementById('btnMigrateYes').disabled = false;
+    document.getElementById('btnMigrateNo').disabled = false;
+  }
+});
+
+document.getElementById('btnMigrateNo').addEventListener('click', ()=>{
+  try{ localStorage.removeItem(LEGACY_KEY); }catch(e){}
+  hideMigrateBar();
+  toast('已丢弃本地旧数据');
+});
+
+/* ==================== 离线提示 ==================== */
+function setOfflineBar(show){
+  document.getElementById('offlineBar').style.display = show ? 'block' : 'none';
+}
+window.addEventListener('offline', ()=>{ setOfflineBar(true);  toast('已离线，数据将在联网后自动同步'); });
+window.addEventListener('online',  ()=>{ setOfflineBar(false); toast('网络已恢复'); });
+if(!navigator.onLine) setOfflineBar(true);
 
 /* ==================== 工具函数 ==================== */
 function pad2(n){ return String(n).padStart(2,'0'); }
@@ -621,7 +958,7 @@ document.getElementById('expenseList').addEventListener('click', e=>{
   const sign = btn.dataset.act === 'add' ? 1 : -1;
   d[cat].amount = +((Number(d[cat].amount)||0) + sign*val).toFixed(2);
 
-  save();
+  saveModule('expenses').catch(()=>{});
   renderExpense();
   renderExpenseSummary();
 });
@@ -633,7 +970,7 @@ document.getElementById('expenseList').addEventListener('input', e=>{
   const k = t.dataset.note;
   if(!d[k]) d[k] = {amount:0, note:''};
   d[k].note = t.value;
-  save();
+  saveModule('expenses').catch(()=>{});
 });
 
 document.getElementById('expenseMonth').addEventListener('change', e=>{
@@ -772,13 +1109,13 @@ document.getElementById('depAdd').addEventListener('click', ()=>{
     const rec = db.deposits.find(x => x.id === depEditId);
     if(!rec){ depResetForm(); renderDeposits(); toast('该记录已不存在'); return; }
     Object.assign(rec, v);
-    save();
+    saveModule('deposits').catch(()=>{});
     depResetForm();
     renderDeposits();
     toast('已保存修改');
   }else{
     db.deposits.push({ id: Date.now(), ...v });
-    save();
+    saveModule('deposits').catch(()=>{});
     renderDeposits();
     document.getElementById('depRate').value = '';
     document.getElementById('depYears').value = '';
@@ -826,7 +1163,7 @@ document.getElementById('depBody').addEventListener('click', e=>{
 
   db.deposits = db.deposits.filter(x => x.id !== id);
   if(depEditId === id) depResetForm();
-  save();
+  saveModule('deposits').catch(()=>{});
   renderDeposits();
   toast('已删除');
 });
@@ -933,7 +1270,7 @@ document.getElementById('assetBody').addEventListener('click', e=>{
       d[k][f] = isNaN(v) ? 0 : v;
     });
     editingMonths.delete(m);
-    save();
+    saveModule('assets').catch(()=>{});
     renderAssets();
     toast('已保存');
     return;
@@ -945,7 +1282,7 @@ document.getElementById('assetBody').addEventListener('click', e=>{
     if(!confirm(`确定删除 ${m} 的资产记录吗？`)) return;
     delete db.assets[m];
     editingMonths.delete(m);
-    save();
+    saveModule('assets').catch(()=>{});
     renderAssets();
   }
 });
@@ -956,7 +1293,7 @@ document.getElementById('addAssetMonth').addEventListener('click', ()=>{
   if(!m){ toast('请选择月份'); return; }
   if(db.assets[m]){ toast('该月份已存在'); return; }
   ensureAssetMonth(m);
-  save();
+  saveModule('assets').catch(()=>{});
   editingMonths.add(m);
   renderAssets();
   toast('已添加，可直接编辑');
@@ -1048,14 +1385,14 @@ document.getElementById('dcaAdd').addEventListener('click', ()=>{
     const rec = db.dca.find(x => x.id === dcaEditId);
     if(!rec){ dcaResetForm(); renderDca(); toast('该记录已不存在'); return; }
     Object.assign(rec, v);
-    save();
+    saveModule('dca').catch(()=>{});
     dcaResetForm();
     renderDca();
     toast('已保存修改');
   }else{
     /* —— 新增记录 —— */
     db.dca.push({ id: Date.now(), ...v });
-    save();
+    saveModule('dca').catch(()=>{});
     renderDca();
     document.getElementById('dcaPrice').value  = '';
     document.getElementById('dcaShares').value = '';
@@ -1108,7 +1445,7 @@ document.getElementById('dcaBody').addEventListener('click', e=>{
 
   db.dca = db.dca.filter(x => x.id !== id);
   if(dcaEditId === id) dcaResetForm();   /* 正在编辑的记录被删 → 退出编辑态 */
-  save();
+  saveModule('dca').catch(()=>{});
   renderDca();
   toast('已删除');
 });
@@ -1280,11 +1617,10 @@ function mergeImport(data){
     });
   }
 
-  save();
   return stats;
 }
 
-function doMergeImport(){
+async function doMergeImport(){
   const raw = document.getElementById('importText').value.trim();
   if(!raw){ toast('请先粘贴 JSON 文本'); return; }
 
@@ -1299,10 +1635,11 @@ function doMergeImport(){
     toast('未找到可导入的字段（expenses / assets / deposits / dca）'); return;
   }
 
-  if(!confirm('确定将以上数据合并到本地吗？本地已有数据不会被删除。')) return;
+  if(!confirm('确定将以上数据合并到云端吗？云端已有数据不会被删除。')) return;
 
   try{
     const s = mergeImport(data);
+    await saveAllModules();              /* 全部写云端成功后才算导入成功 */
     editingMonths.clear();
     dcaResetForm();            /* 导入后退出定投编辑态，避免 id 错乱 */
     depResetForm();            /* 同样退出定期存款编辑态 */
@@ -1320,18 +1657,19 @@ function doMergeImport(){
 
 function doClearAll(){
   if(!confirm('确定清空全部数据吗？此操作不可恢复。')) return;
-  if(!confirm('再次确认：真的要删除所有支出、资产、定期存款、定投记录吗？')) return;
+  if(!confirm('再次确认：真的要删除云端全部支出、资产、定期存款与定投记录吗？')) return;
 
   db = { expenses:{}, assets:{}, dca:[], deposits:[] };
   editingMonths.clear();
-  save();
   state.expenseMonth = curMonth();
   document.getElementById('expenseMonth').value = state.expenseMonth;
   document.getElementById('assetNewMonth').value = curMonth();
   dcaResetForm();
   depResetForm();
-  refreshAllViews();
-  toast('已清空所有数据');
+  refreshAllViews();                               /* 本地立即生效 */
+  saveAllModules()
+    .then(()=>toast('已清空所有数据'))
+    .catch(()=>{});
 }
 
 document.getElementById('btnRefreshExport').addEventListener('click', ()=>{
@@ -1367,20 +1705,12 @@ document.querySelectorAll('.tab').forEach(tab=>{
 
 /* ==================== 初始化 ==================== */
 (function init(){
-  load();
-
-  if(!Array.isArray(db.deposits)) db.deposits = [];
-
-  if(!Object.keys(db.assets).length){
-    ensureAssetMonth(curMonth());
-    editingMonths.add(curMonth());
-    save();
-  }
-
   state.expenseMonth = curMonth();
   document.getElementById('expenseMonth').value = state.expenseMonth;
   document.getElementById('assetNewMonth').value = curMonth();
   document.getElementById('dcaDate').value = todayStr();
+
+  dcaResetForm();
 
   renderExpense();
   renderExpenseSummary();
@@ -1388,6 +1718,8 @@ document.querySelectorAll('.tab').forEach(tab=>{
   renderAssets();
   renderDca();
   renderDataMgmt();
+
+  /* 登录状态由 onAuthStateChanged 驱动：已登录 → enterApp 载入云端数据并渲染 */
 })();
 </script>
 </body>
