@@ -85,8 +85,15 @@ textarea::placeholder{color:#b6bfcc}
 .btn-add:hover{background:#d5efe1}
 .btn-sub{background:#fdeeee;color:#d94a4a;border-color:#f7d5d5}
 .btn-sub:hover{background:#fbe0e0}
-.sum-bar{margin-top:10px;padding:11px 16px;background:#f7f9fc;border-radius:10px;text-align:right;font-size:13px;color:var(--muted)}
+.sum-bar{margin-top:10px;padding:11px 16px;background:#f7f9fc;border-radius:10px;display:flex;justify-content:space-between;align-items:center;gap:6px 18px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
 .sum-bar b{color:var(--primary);font-size:18px;margin-left:8px;font-variant-numeric:tabular-nums}
+.last-action{color:var(--muted)}
+.last-action .dir{font-weight:600}
+.last-action .dir-add{color:var(--cash)}
+.last-action .dir-sub{color:var(--high)}
+.sum-bar .la-amt{color:var(--text);font-size:13px;font-weight:600;margin-left:2px;margin-right:2px}
+.last-action .la-time{color:var(--muted)}
+.sum-bar > span:last-child{margin-left:auto}
 
 /* ---------- 表格 ---------- */
 table{width:100%;border-collapse:collapse;font-size:13px}
@@ -95,6 +102,9 @@ thead th{background:#f7f9fc;color:#55617a;font-weight:600;font-size:12.5px}
 tbody tr:hover td{background:#fafcff}
 .month-cell{font-weight:600;font-variant-numeric:tabular-nums}
 .total-cell{font-weight:700;color:var(--primary);font-variant-numeric:tabular-nums}
+td.note-cell{text-align:left;color:var(--muted)}
+td.note-cell .note-text{display:block;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+th.th-note{text-align:left}
 .empty{text-align:center;color:var(--muted);padding:28px 10px}
 .del{border:none;background:transparent;color:#c3ccd9;font-size:14px;padding:4px 7px;border-radius:6px;transition:.15s}
 .del:hover{background:#fdeeee;color:#d94a4a}
@@ -273,6 +283,8 @@ body.logged-out .app{display:none}
   th,td{padding:9px 8px}
   .del{padding:8px 11px;font-size:16px}
   .mobile-only{display:block;color:var(--muted);font-size:12px;margin:-4px 0 8px}
+  td.note-cell{min-width:150px}
+  td.note-cell .note-text{max-width:none;white-space:normal;overflow:visible;text-overflow:clip}
 
   /* 资产操作按钮放大 */
   .btn-edit,.btn-save,.btn-cancel{padding:9px 14px;font-size:13.5px}
@@ -358,7 +370,10 @@ body.logged-out .app{display:none}
         </div>
         <div id="expenseList"></div>
       </div>
-      <div class="sum-bar">本期合计 <b id="expenseTotal">¥0.00</b></div>
+      <div class="sum-bar">
+        <span class="last-action" id="lastAction">最近一笔：—</span>
+        <span>本期合计 <b id="expenseTotal">¥0.00</b></span>
+      </div>
     </div>
 
     <div class="card">
@@ -885,6 +900,38 @@ function ensureExpMonth(m){
   return db.expenses[m];
 }
 
+/* 最近一笔支出：时间格式化（今天/昨天/日期 + HH:mm） */
+function fmtTime(ts){
+  const d = new Date(ts);
+  if(ts == null || isNaN(d.getTime())) return '';
+  const now = new Date();
+  const dayStart = t => new Date(t.getFullYear(), t.getMonth(), t.getDate()).getTime();
+  const dayDiff = Math.round((dayStart(now) - dayStart(d)) / 86400000);
+  const hm = pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  if(dayDiff === 0) return '今天 ' + hm;
+  if(dayDiff === 1) return '昨天 ' + hm;
+  if(d.getFullYear() === now.getFullYear()) return pad2(d.getMonth()+1) + '-' + pad2(d.getDate()) + ' ' + hm;
+  return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()) + ' ' + hm;
+}
+
+/* 渲染最近一笔支出（全局字段 db.expenses._lastAction） */
+function renderLastAction(){
+  const la = db.expenses._lastAction;
+  const el = document.getElementById('lastAction');
+  if(!la || !la.cat){
+    el.textContent = '最近一笔：—';
+    return;
+  }
+  const cat = CATS.find(c=>c.key === la.cat);
+  const catName = cat ? cat.name : String(la.cat);
+  const isSub = la.dir === 'sub';
+  const timeTxt = fmtTime(la.ts);
+  el.innerHTML = '最近一笔：' +
+    `<span class="dir ${isSub ? 'dir-sub' : 'dir-add'}">${isSub ? '扣减' : '增加'}</span>` +
+    ` <b class="la-amt">¥${fmt(la.amount)}</b> ${esc(catName)}` +
+    (timeTxt ? ` · <span class="la-time">${timeTxt}</span>` : '');
+}
+
 function renderExpense(){
   const m = state.expenseMonth;
   document.getElementById('expenseMonth').value = m;
@@ -906,6 +953,7 @@ function renderExpense(){
 
   document.getElementById('expenseList').innerHTML = html;
   document.getElementById('expenseTotal').textContent = '¥' + fmt(total);
+  renderLastAction();
 }
 
 function renderExpenseSummary(){
@@ -913,16 +961,16 @@ function renderExpenseSummary(){
     const d = db.expenses[m] || {};
     return CATS.some(c=>{
       const r = d[c.key];
-      return r && ((Number(r.amount)||0)!==0 || (r.note||'')!=='');
+      return r && ((Number(r.amount)||0)!==0 || String(r.note||'').trim() !== '');
     });
   }).sort().reverse();
 
-  let html = `<table style="min-width:760px"><thead><tr><th>月份</th>${
+  let html = `<table style="min-width:980px"><thead><tr><th>月份</th>${
     CATS.map(c=>`<th>${c.name}</th>`).join('')
-  }<th>合计</th></tr></thead><tbody>`;
+  }<th>合计</th><th class="th-note">备注</th></tr></thead><tbody>`;
 
   if(!months.length){
-    html += `<tr><td colspan="${CATS.length+2}" class="empty">暂无记录</td></tr>`;
+    html += `<tr><td colspan="${CATS.length+3}" class="empty">暂无记录</td></tr>`;
   }else{
     months.forEach(m=>{
       const d = db.expenses[m] || {};
@@ -932,7 +980,14 @@ function renderExpenseSummary(){
         total += v;
         return `<td>${v ? '¥'+fmt(v) : '-'}</td>`;
       }).join('');
-      html += `<tr><td class="month-cell">${m}</td>${tds}<td class="total-cell">¥${fmt(total)}</td></tr>`;
+      const notes = CATS.filter(c=>{
+        const r = d[c.key];
+        return r && String(r.note || '').trim() !== '';
+      }).map(c=>`${c.name}: ${String(d[c.key].note).trim()}`);
+      const noteTxt = notes.join('; ');
+      const noteHtml = esc(noteTxt);
+      html += `<tr><td class="month-cell">${esc(m)}</td>${tds}<td class="total-cell">¥${fmt(total)}</td>
+        <td class="note-cell"><span class="note-text"${noteTxt ? ` title="${noteHtml}"` : ''}>${noteTxt ? noteHtml : '—'}</span></td></tr>`;
     });
   }
   html += '</tbody></table>';
@@ -957,6 +1012,7 @@ document.getElementById('expenseList').addEventListener('click', e=>{
   if(!d[cat]) d[cat] = {amount:0, note:''};
   const sign = btn.dataset.act === 'add' ? 1 : -1;
   d[cat].amount = +((Number(d[cat].amount)||0) + sign*val).toFixed(2);
+  db.expenses._lastAction = { cat, dir: btn.dataset.act, amount: val, ts: Date.now() };
 
   saveModule('expenses').catch(()=>{});
   renderExpense();
@@ -971,6 +1027,7 @@ document.getElementById('expenseList').addEventListener('input', e=>{
   if(!d[k]) d[k] = {amount:0, note:''};
   d[k].note = t.value;
   saveModule('expenses').catch(()=>{});
+  renderExpenseSummary();
 });
 
 document.getElementById('expenseMonth').addEventListener('change', e=>{
@@ -1539,6 +1596,7 @@ function mergeImport(data){
 
   if(data.expenses && typeof data.expenses === 'object'){
     Object.keys(data.expenses).forEach(m=>{
+      if(m === '_lastAction') return;   /* 最近一笔元数据不参与月份合并，下方单独处理 */
       const src = data.expenses[m];
       if(!src || typeof src !== 'object') return;
       if(!db.expenses[m]) db.expenses[m] = {};
@@ -1557,6 +1615,25 @@ function mergeImport(data){
         stats.expMerged++;
       });
     });
+
+    /* 最近一笔元数据：时间戳新者胜（cat 须为非空字符串，ts 须为有效数字时间戳） */
+    const srcLa = data.expenses._lastAction;
+    const srcCat = srcLa && typeof srcLa === 'object' && typeof srcLa.cat === 'string' ? srcLa.cat : '';
+    if(srcCat){
+      const srcTs = typeof srcLa.ts === 'number' ? srcLa.ts : NaN;
+      if(Number.isFinite(srcTs) && srcTs > 0){
+        const curLa = db.expenses._lastAction;
+        const curTs = curLa ? new Date(curLa.ts).getTime() : NaN;
+        if(!curLa || isNaN(curTs) || srcTs > curTs){
+          db.expenses._lastAction = {
+            cat: srcCat,
+            dir: srcLa.dir === 'sub' ? 'sub' : 'add',
+            amount: Number(srcLa.amount) || 0,
+            ts: srcTs
+          };
+        }
+      }
+    }
   }
 
   if(data.assets && typeof data.assets === 'object'){
