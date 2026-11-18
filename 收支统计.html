@@ -439,6 +439,14 @@ body.logged-out .app{display:none}
               <th>月份</th>
               <th class="h-high">宽基+股票</th>
               <th class="h-high th-rate">收益率</th>
+              <th class="h-high">南方红利50</th>
+              <th class="h-high th-rate">收益率</th>
+              <th class="h-high">东方中证红利</th>
+              <th class="h-high th-rate">收益率</th>
+              <th class="h-high">创业版指</th>
+              <th class="h-high th-rate">收益率</th>
+              <th class="h-high">标普500+纳指100</th>
+              <th class="h-high th-rate">收益率</th>
               <th class="h-high">黄金</th>
               <th class="h-high th-rate">收益率</th>
               <th class="h-low">债基</th>
@@ -467,6 +475,10 @@ body.logged-out .app{display:none}
         <input type="date" id="dcaDate">
         <select id="dcaType">
           <option value="宽基+股票">宽基+股票</option>
+          <option value="南方红利50">南方红利50</option>
+          <option value="东方中证红利">东方中证红利</option>
+          <option value="创业版指">创业版指</option>
+          <option value="标普500+纳指100">标普500+纳指100</option>
           <option value="黄金">黄金</option>
           <option value="债基">债基</option>
           <option value="定期">定期</option>
@@ -574,6 +586,12 @@ const CATS = [
 
 const ASSET_COLS = [
   {key:'stock',  name:'宽基+股票', cls:'high'},
+  {key:'stock',  name:'创业版指', cls:'high'},
+  {key:'stock',  name:'标普500+纳指100', cls:'high'},
+  {key:'stock',  name:'南方红利50', cls:'high'},
+  {key:'stock',  name:'东方中证红利', cls:'high'},
+  {key:'stock',  name:'创业版指', cls:'high'},
+  {key:'stock',  name:'标普500+纳指100', cls:'high'},
   {key:'gold',   name:'黄金',      cls:'high'},
   {key:'bond',   name:'债基',      cls:'low'},
   {key:'fixed',  name:'定期',      cls:'cash'},
@@ -1364,7 +1382,7 @@ let dcaEditId = null;
 function dcaResetForm(){
   dcaEditId = null;
   document.getElementById('dcaDate').value   = todayStr();
-  document.getElementById('dcaType').value   = '宽基+股票';
+  document.getElementById('dcaType').value   = '南方红利50';
   document.getElementById('dcaPrice').value  = '';
   document.getElementById('dcaShares').value = '';
   document.getElementById('dcaAmount').value = '';
