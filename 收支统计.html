@@ -444,7 +444,7 @@ body.logged-out .app{display:none}
     <!-- 权益资产维护 -->
     <div class="card">
       <div class="card-head">
-        <div class="card-title">权益资产维护 <small>投入单价 / 已投份数 / 资产（元）/ 持有收益 / 持有收益率 / 跌6%·跌8%净值 自动计算</small></div>
+        <div class="card-title">权益资产维护 <small>投入单价 / 已投份数 / 持仓份额 / 持有收益 / 持有收益率 / 跌6%·跌8%净值 自动计算，资产（元）手工录入</small></div>
       </div>
       <div class="eq-form">
         <input type="text"   id="eqName"           placeholder="投资名称">
@@ -454,8 +454,8 @@ body.logged-out .app{display:none}
         <input type="number" id="eqInvestedAmount" step="0.01"   min="0" placeholder="已投金额">
         <input type="number" id="eqInvestedShares" class="ro" placeholder="已投份数（自动）"   readonly>
         <input type="number" id="eqHoldPrice"      step="0.0001" min="0" placeholder="持仓单价">
-        <input type="number" id="eqHoldShares"     step="0.01"   min="0" placeholder="持仓份额">
-        <input type="number" id="eqAssetValue"     class="ro" placeholder="资产（元）（自动）" readonly>
+        <input type="number" id="eqHoldShares"     class="ro" placeholder="持仓份额（自动）"   readonly>
+        <input type="number" id="eqAssetValue"     step="0.01"   min="0" placeholder="资产（元）">
         <input type="number" id="eqProfit"         class="ro" placeholder="持有收益（自动）"   readonly>
         <input type="number" id="eqProfitRate"     class="ro" placeholder="持有收益率（自动）" readonly>
         <input type="number" id="eqDrop6"          class="ro" placeholder="跌6%净值（自动）"   readonly>
@@ -508,6 +508,14 @@ body.logged-out .app{display:none}
             <tr>
               <th>月份</th>
               <th class="h-high">宽基+股票</th>
+              <th class="h-high th-rate">收益率</th>
+              <th class="h-high">南方红利50</th>
+              <th class="h-high th-rate">收益率</th>
+              <th class="h-high">东方中证红利</th>
+              <th class="h-high th-rate">收益率</th>
+              <th class="h-high">创业版指</th>
+              <th class="h-high th-rate">收益率</th>
+              <th class="h-high">标普500+纳指100</th>
               <th class="h-high th-rate">收益率</th>
               <th class="h-high">黄金</th>
               <th class="h-high th-rate">收益率</th>
@@ -648,6 +656,12 @@ const CATS = [
 
 const ASSET_COLS = [
   {key:'stock',  name:'宽基+股票', cls:'high'},
+  {key:'stock',  name:'创业版指', cls:'high'},
+  {key:'stock',  name:'标普500+纳指100', cls:'high'},
+  {key:'stock',  name:'南方红利50', cls:'high'},
+  {key:'stock',  name:'东方中证红利', cls:'high'},
+  {key:'stock',  name:'创业版指', cls:'high'},
+  {key:'stock',  name:'标普500+纳指100', cls:'high'},
   {key:'gold',   name:'黄金',      cls:'high'},
   {key:'bond',   name:'债基',      cls:'low'},
   {key:'fixed',  name:'定期',      cls:'cash'},
@@ -1306,23 +1320,27 @@ document.getElementById('depBody').addEventListener('click', e=>{
 /* 正在编辑的记录 ID，null 表示新增模式 */
 let eqEditId = null;
 
-/* 派生字段计算 */
+/* 派生字段计算
+   手工输入：planAmount, planShares, investedAmount, holdPrice, assetValue
+   自动计算：investPrice（计划投入金额/计划投入份数）、investedShares（已投金额/投入单价）、
+             holdShares（已投金额/持仓单价）、profit（资产-已投金额）、
+             profitRate（持有收益/已投金额×100）、drop6/drop8（持仓单价×0.94 / ×0.92） */
 function eqCalc(rec){
   const planAmount     = Number(rec.planAmount)     || 0;
   const planShares     = Number(rec.planShares)     || 0;
   const investedAmount = Number(rec.investedAmount) || 0;
   const holdPrice      = Number(rec.holdPrice)      || 0;
-  const holdShares     = Number(rec.holdShares)     || 0;
+  const assetValue     = Number(rec.assetValue)     || 0;
 
-  const investPrice    = planShares > 0 ? planAmount / planShares : 0;   // 投入单价
-  const investedShares = investPrice > 0 ? investedAmount / investPrice : 0; // 已投份数
-  const assetValue     = holdPrice * holdShares;                          // 资产（元）
-  const profit         = assetValue - investedAmount;                     // 持有收益
+  const investPrice    = planShares > 0 ? planAmount / planShares : 0;        // 投入单价（自动）
+  const investedShares = investPrice > 0 ? investedAmount / investPrice : 0;  // 已投份数（自动）
+  const holdShares     = holdPrice > 0 ? investedAmount / holdPrice : 0;      // 持仓份额（自动）
+  const profit         = assetValue - investedAmount;                          // 持有收益（自动）
   const profitRate     = investedAmount > 0 ? (profit / investedAmount) * 100 : 0; // 持有收益率 %
-  const drop6          = holdPrice * 0.94;                                // 跌6%净值
-  const drop8          = holdPrice * 0.92;                                // 跌8%净值
+  const drop6          = holdPrice * 0.94;                                     // 跌6%净值
+  const drop8          = holdPrice * 0.92;                                     // 跌8%净值
 
-  return { investPrice, investedShares, assetValue, profit, profitRate, drop6, drop8 };
+  return { investPrice, investedShares, holdShares, assetValue, profit, profitRate, drop6, drop8 };
 }
 
 function renderEquity(){
@@ -1351,7 +1369,7 @@ function renderEquity(){
       <td class="num">¥${fmt(r.investedAmount)}</td>
       <td class="num">${fmtNum(c.investedShares, 2)}</td>
       <td class="num">${fmtNum(r.holdPrice, 4)}</td>
-      <td class="num">${fmtNum(r.holdShares, 2)}</td>
+      <td class="num">${fmtNum(c.holdShares, 2)}</td>
       <td class="num total-cell">¥${fmt(c.assetValue)}</td>
       <td class="num ${cls}">${profitTxt}</td>
       <td class="num ${cls}">${rateTxt}</td>
@@ -1380,14 +1398,14 @@ function renderEquity(){
      <span>记录笔数<b>${list.length}</b></span>`;
 }
 
-/* 表单联动回显（只读字段） */
+/* 表单联动回显（自动字段） */
 function eqRefreshPreview(){
   const rec = {
     planAmount:     parseFloat(document.getElementById('eqPlanAmount').value)     || 0,
     planShares:     parseFloat(document.getElementById('eqPlanShares').value)     || 0,
     investedAmount: parseFloat(document.getElementById('eqInvestedAmount').value) || 0,
     holdPrice:      parseFloat(document.getElementById('eqHoldPrice').value)      || 0,
-    holdShares:     parseFloat(document.getElementById('eqHoldShares').value)     || 0
+    assetValue:     parseFloat(document.getElementById('eqAssetValue').value)     || 0
   };
   const c = eqCalc(rec);
   const setV = (id, v, d)=>{
@@ -1396,14 +1414,15 @@ function eqRefreshPreview(){
   };
   setV('eqInvestPrice',    c.investPrice,    4);
   setV('eqInvestedShares', c.investedShares, 2);
-  setV('eqAssetValue',     c.assetValue,     2);
+  setV('eqHoldShares',     c.holdShares,     2);
   setV('eqProfit',         c.profit,         2);
   setV('eqProfitRate',     c.profitRate,     2);
   setV('eqDrop6',          c.drop6,          4);
   setV('eqDrop8',          c.drop8,          4);
 }
 
-['eqPlanAmount','eqPlanShares','eqInvestedAmount','eqHoldPrice','eqHoldShares'].forEach(id=>{
+/* 只有手工输入字段才触发联动；eqAssetValue 是手工字段，也加入监听 */
+['eqPlanAmount','eqPlanShares','eqInvestedAmount','eqHoldPrice','eqAssetValue'].forEach(id=>{
   document.getElementById(id).addEventListener('input', eqRefreshPreview);
 });
 
@@ -1433,7 +1452,7 @@ function readEqForm(){
     planShares:     num('eqPlanShares'),
     investedAmount: num('eqInvestedAmount'),
     holdPrice:      num('eqHoldPrice'),
-    holdShares:     num('eqHoldShares')
+    assetValue:     num('eqAssetValue')   /* 手工录入 */
   };
 }
 
@@ -1481,7 +1500,7 @@ document.getElementById('eqBody').addEventListener('click', e=>{
     document.getElementById('eqPlanShares').value     = Number(r.planShares)     || '';
     document.getElementById('eqInvestedAmount').value = Number(r.investedAmount) || '';
     document.getElementById('eqHoldPrice').value      = Number(r.holdPrice)      || '';
-    document.getElementById('eqHoldShares').value     = Number(r.holdShares)     || '';
+    document.getElementById('eqAssetValue').value     = Number(r.assetValue)     || '';
     eqRefreshPreview();
 
     document.getElementById('eqAdd').textContent = '保存修改';
@@ -1966,14 +1985,20 @@ function mergeImport(data){
       let id = Number(r.id);
       if(!id) id = Date.now() + Math.floor(Math.random()*1000);
       if(ids.has(id)){ stats.eqSkipped++; return; }
+      /* 兼容旧数据：旧格式用 holdShares 派生 assetValue；新格式直接读 assetValue */
+      const hp = Number(r.holdPrice) || 0;
+      const hs = Number(r.holdShares) || 0;
+      const av = (r.assetValue != null && r.assetValue !== '')
+        ? (Number(r.assetValue) || 0)
+        : hp * hs;
       db.equity.push({
         id,
         name:           String(r.name || ''),
         planAmount:     Number(r.planAmount)     || 0,
         planShares:     Number(r.planShares)     || 0,
         investedAmount: Number(r.investedAmount) || 0,
-        holdPrice:      Number(r.holdPrice)      || 0,
-        holdShares:     Number(r.holdShares)     || 0
+        holdPrice:      hp,
+        assetValue:     av
       });
       ids.add(id);
       stats.eqAdded++;
