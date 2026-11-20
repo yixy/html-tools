@@ -161,6 +161,20 @@ td.rate-cell.text-cell{color:#7b8794;font-size:12.5px;padding:9px 10px}
 }
 #dcaBody tr.editing td{background:#eef4ff}
 #depBody tr.editing td{background:#eef4ff}
+#eqBody tr.editing td{background:#eef4ff}
+
+/* ---------- 权益资产维护 ---------- */
+.eq-form{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  gap:8px;margin-bottom:14px;
+}
+.eq-form .ro{background:#f7f9fc;color:var(--muted)}
+.eq-form input[type=number]{text-align:right}
+.eq-form input.ro{text-align:right}
+.eq-form button{min-width:0}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+td.num.profit-up, .dca-sum b.profit-up{color:#199c5b}
+td.num.profit-down, .dca-sum b.profit-down{color:#d94a4a}
 
 /* ---------- 数据管理 ---------- */
 .overview{display:flex;gap:10px;flex-wrap:wrap}
@@ -297,6 +311,10 @@ body.logged-out .app{display:none}
   .op-cell button{padding:8px 12px;font-size:13.5px}
   .op-cell .del{padding:8px 11px}
 
+  /* 权益资产 */
+  .eq-form{grid-template-columns:1fr 1fr}
+  .eq-form button{grid-column:1 / -1;padding:12px 0;font-size:15px}
+
   /* 数据管理 */
   .ov-item{flex:1 1 100%}
   .dm-row .btn{flex:1 1 100%}
@@ -423,6 +441,58 @@ body.logged-out .app{display:none}
       <div class="dca-sum" id="depSum"></div>
     </div>
 
+    <!-- 权益资产维护 -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">权益资产维护 <small>投入单价 / 已投份数 / 资产（元）/ 持有收益 / 持有收益率 / 跌6%·跌8%净值 自动计算</small></div>
+      </div>
+      <div class="eq-form">
+        <input type="text"   id="eqName"           placeholder="投资名称">
+        <input type="number" id="eqPlanAmount"     step="0.01"   min="0" placeholder="计划投入金额">
+        <input type="number" id="eqPlanShares"     step="0.01"   min="0" placeholder="计划投入份数">
+        <input type="number" id="eqInvestPrice"    class="ro" placeholder="投入单价（自动）"   readonly>
+        <input type="number" id="eqInvestedAmount" step="0.01"   min="0" placeholder="已投金额">
+        <input type="number" id="eqInvestedShares" class="ro" placeholder="已投份数（自动）"   readonly>
+        <input type="number" id="eqHoldPrice"      step="0.0001" min="0" placeholder="持仓单价">
+        <input type="number" id="eqHoldShares"     step="0.01"   min="0" placeholder="持仓份额">
+        <input type="number" id="eqAssetValue"     class="ro" placeholder="资产（元）（自动）" readonly>
+        <input type="number" id="eqProfit"         class="ro" placeholder="持有收益（自动）"   readonly>
+        <input type="number" id="eqProfitRate"     class="ro" placeholder="持有收益率（自动）" readonly>
+        <input type="number" id="eqDrop6"          class="ro" placeholder="跌6%净值（自动）"   readonly>
+        <input type="number" id="eqDrop8"          class="ro" placeholder="跌8%净值（自动）"   readonly>
+        <button class="btn btn-primary" id="eqAdd">添加资产</button>
+        <button class="btn" id="eqCancel" style="display:none">取消编辑</button>
+      </div>
+      <div class="dca-edit-hint" id="eqEditHint" style="display:none">
+        ✎ 正在编辑一条权益资产记录，修改后点击「保存修改」
+      </div>
+      <div class="mobile-only">左右滑动表格查看更多 →</div>
+      <div class="scroll-x">
+        <table style="min-width:1440px">
+          <thead>
+            <tr>
+              <th>投资名称</th>
+              <th>计划投入金额</th>
+              <th>计划投入份数</th>
+              <th>投入单价</th>
+              <th>已投金额</th>
+              <th>已投份数</th>
+              <th>持仓单价</th>
+              <th>持仓份额</th>
+              <th>资产（元）</th>
+              <th>持有收益</th>
+              <th>持有收益率</th>
+              <th>跌6%净值</th>
+              <th>跌8%净值</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="eqBody"></tbody>
+        </table>
+      </div>
+      <div class="dca-sum" id="eqSum"></div>
+    </div>
+
     <div class="card">
       <div class="card-head">
         <div class="card-title">资产月度台账 <small>默认展示 · 点击「编辑」后可修改</small></div>
@@ -438,14 +508,6 @@ body.logged-out .app{display:none}
             <tr>
               <th>月份</th>
               <th class="h-high">宽基+股票</th>
-              <th class="h-high th-rate">收益率</th>
-              <th class="h-high">南方红利50</th>
-              <th class="h-high th-rate">收益率</th>
-              <th class="h-high">东方中证红利</th>
-              <th class="h-high th-rate">收益率</th>
-              <th class="h-high">创业版指</th>
-              <th class="h-high th-rate">收益率</th>
-              <th class="h-high">标普500+纳指100</th>
               <th class="h-high th-rate">收益率</th>
               <th class="h-high">黄金</th>
               <th class="h-high th-rate">收益率</th>
@@ -525,7 +587,7 @@ body.logged-out .app{display:none}
 
     <div class="card">
       <div class="card-head">
-        <div class="card-title">导出数据 <small>包含支出、资产、定期存款、定投全部数据</small></div>
+        <div class="card-title">导出数据 <small>包含支出、资产、定期存款、权益资产、定投全部数据</small></div>
       </div>
       <textarea id="exportText" rows="10" readonly spellcheck="false"></textarea>
       <div class="dm-row">
@@ -542,7 +604,7 @@ body.logged-out .app{display:none}
       <textarea id="importText" rows="8" placeholder="在此粘贴导出的 JSON 文本…" spellcheck="false"></textarea>
       <p class="dm-note">
         <b>合并规则：</b>支出按月-分类累加金额，备注以导入为准；资产按月-栏位用导入的非零值覆盖；
-        定期存款与定投按记录 ID 去重追加。导入不会删除云端已有数据。
+        定期存款、权益资产与定投按记录 ID 去重追加。导入不会删除云端已有数据。
       </p>
       <div class="dm-row">
         <button class="btn btn-primary" id="btnMergeImport">合并导入</button>
@@ -553,7 +615,7 @@ body.logged-out .app{display:none}
       <div class="card-head">
         <div class="card-title">清空数据 <small>危险操作，请谨慎</small></div>
       </div>
-      <p class="dm-note">将删除云端中保存的全部支出、资产、定期存款与定投记录，且无法恢复。</p>
+      <p class="dm-note">将删除云端中保存的全部支出、资产、定期存款、权益资产与定投记录，且无法恢复。</p>
       <div class="dm-row">
         <button class="btn danger-btn" id="btnClearAll">清空所有数据</button>
       </div>
@@ -586,12 +648,6 @@ const CATS = [
 
 const ASSET_COLS = [
   {key:'stock',  name:'宽基+股票', cls:'high'},
-  {key:'stock',  name:'创业版指', cls:'high'},
-  {key:'stock',  name:'标普500+纳指100', cls:'high'},
-  {key:'stock',  name:'南方红利50', cls:'high'},
-  {key:'stock',  name:'东方中证红利', cls:'high'},
-  {key:'stock',  name:'创业版指', cls:'high'},
-  {key:'stock',  name:'标普500+纳指100', cls:'high'},
   {key:'gold',   name:'黄金',      cls:'high'},
   {key:'bond',   name:'债基',      cls:'low'},
   {key:'fixed',  name:'定期',      cls:'cash'},
@@ -625,18 +681,18 @@ fdb.enablePersistence({ synchronizeTabs: true }).catch(e=>console.warn('离线�
 
 /* ==================== 数据层 ==================== */
 /* 内存镜像：业务代码直接读写 db，值由云端驱动 */
-let db = { expenses:{}, assets:{}, dca:[], deposits:[] };
+let db = { expenses:{}, assets:{}, dca:[], deposits:[], equity:[] };
 
-const MODULES = ['expenses', 'assets', 'dca', 'deposits'];
+const MODULES = ['expenses', 'assets', 'dca', 'deposits', 'equity'];
 
-const ARRAY_MODULES = ['dca', 'deposits'];
+const ARRAY_MODULES = ['dca', 'deposits', 'equity'];
 
 function defaultModule(name){
   return ARRAY_MODULES.includes(name) ? [] : {};
 }
 
 /* 云文档内容 ↔ 内存镜像转换：Firestore 文档顶层必须是对象，
-   数组模块（dca/deposits）以 { items: [...] } 形式存储 */
+   数组模块（dca/deposits/equity）以 { items: [...] } 形式存储 */
 function moduleToCloud(name){
   return ARRAY_MODULES.includes(name) ? { items: db[name] } : db[name];
 }
@@ -653,7 +709,7 @@ function moduleRef(name){
   return fdb.collection('users').doc(auth.currentUser.uid).collection('data').doc(name);
 }
 
-/* 读取云端 4 个文档到 db；不存在则创建空文档 */
+/* 读取云端 5 个文档到 db；不存在则创建空文档 */
 async function loadCloud(){
   const results = await Promise.all(MODULES.map(n => moduleRef(n).get()));
   results.forEach((doc, i)=>{
@@ -667,6 +723,7 @@ async function loadCloud(){
   });
   if(!Array.isArray(db.dca))      db.dca      = [];
   if(!Array.isArray(db.deposits)) db.deposits = [];
+  if(!Array.isArray(db.equity))   db.equity   = [];
 }
 
 /* 模块级全量写云端 */
@@ -684,7 +741,7 @@ function saveModule(name){
   });
 }
 
-/* 四个模块一次性原子写入（批量提交，避免部分成功） */
+/* 所有模块一次性原子写入（批量提交，避免部分成功） */
 function saveAllModules(){
   if(!auth.currentUser){
     return Promise.reject(Object.assign(new Error('未登录'), {code:'unauthenticated'}));
@@ -704,7 +761,7 @@ function saveAllModules(){
 /* 云端是否有实质数据（判定口径同 renderDataMgmt 的非空口径） */
 function hasCloudData(){
   return MODULES.some(name=>{
-    if(name === 'dca' || name === 'deposits') return db[name].length > 0;
+    if(ARRAY_MODULES.includes(name)) return (db[name] || []).length > 0;
     const d = db[name] || {};
     if(name === 'expenses'){
       return Object.keys(d).some(m=>CATS.some(c=>{
@@ -725,10 +782,11 @@ function renderModule(name){
   else if(name === 'assets')   renderAssets();
   else if(name === 'dca')      renderDca();
   else if(name === 'deposits') renderDeposits();
+  else if(name === 'equity')   renderEquity();
   renderDataMgmt();
 }
 
-/* 实时同步：4 个文档分别监听；值无变化时跳过重渲染 */
+/* 实时同步：各文档分别监听；值无变化时跳过重渲染 */
 let unsubs = [];
 /* 键序无关的 JSON 序列化（Firestore 不保证字段顺序，避免快照误判触发重渲染） */
 function stableJson(v){
@@ -799,6 +857,7 @@ function showLogin(){
   editingMonths.clear();
   depResetForm();
   dcaResetForm();
+  eqResetForm();
   document.body.classList.add('logged-out');
   document.getElementById('userBar').style.display = 'none';
 }
@@ -1243,6 +1302,210 @@ document.getElementById('depBody').addEventListener('click', e=>{
   toast('已删除');
 });
 
+/* ==================== 权益资产维护 ==================== */
+/* 正在编辑的记录 ID，null 表示新增模式 */
+let eqEditId = null;
+
+/* 派生字段计算 */
+function eqCalc(rec){
+  const planAmount     = Number(rec.planAmount)     || 0;
+  const planShares     = Number(rec.planShares)     || 0;
+  const investedAmount = Number(rec.investedAmount) || 0;
+  const holdPrice      = Number(rec.holdPrice)      || 0;
+  const holdShares     = Number(rec.holdShares)     || 0;
+
+  const investPrice    = planShares > 0 ? planAmount / planShares : 0;   // 投入单价
+  const investedShares = investPrice > 0 ? investedAmount / investPrice : 0; // 已投份数
+  const assetValue     = holdPrice * holdShares;                          // 资产（元）
+  const profit         = assetValue - investedAmount;                     // 持有收益
+  const profitRate     = investedAmount > 0 ? (profit / investedAmount) * 100 : 0; // 持有收益率 %
+  const drop6          = holdPrice * 0.94;                                // 跌6%净值
+  const drop8          = holdPrice * 0.92;                                // 跌8%净值
+
+  return { investPrice, investedShares, assetValue, profit, profitRate, drop6, drop8 };
+}
+
+function renderEquity(){
+  if(!Array.isArray(db.equity)) db.equity = [];
+
+  const list = [...db.equity].sort((a, b)=>(b.id || 0) - (a.id || 0));
+
+  let sumInvested = 0, sumAsset = 0, sumProfit = 0;
+
+  const rows = list.map(r=>{
+    const c = eqCalc(r);
+    sumInvested += Number(r.investedAmount) || 0;
+    sumAsset    += c.assetValue;
+    sumProfit   += c.profit;
+
+    const editing = eqEditId === r.id;
+    const cls = c.profit >= 0 ? 'profit-up' : 'profit-down';
+    const profitTxt   = `${c.profit >= 0 ? '+' : '−'}¥${fmt(Math.abs(c.profit))}`;
+    const rateTxt     = `${c.profitRate >= 0 ? '+' : ''}${fmtNum(c.profitRate, 2)}%`;
+
+    return `<tr data-eq-id="${r.id}"${editing ? ' class="editing"' : ''}>
+      <td>${esc(r.name || '—')}</td>
+      <td class="num">¥${fmt(r.planAmount)}</td>
+      <td class="num">${fmtNum(r.planShares, 2)}</td>
+      <td class="num">${fmtNum(c.investPrice, 4)}</td>
+      <td class="num">¥${fmt(r.investedAmount)}</td>
+      <td class="num">${fmtNum(c.investedShares, 2)}</td>
+      <td class="num">${fmtNum(r.holdPrice, 4)}</td>
+      <td class="num">${fmtNum(r.holdShares, 2)}</td>
+      <td class="num total-cell">¥${fmt(c.assetValue)}</td>
+      <td class="num ${cls}">${profitTxt}</td>
+      <td class="num ${cls}">${rateTxt}</td>
+      <td class="num">${fmtNum(c.drop6, 4)}</td>
+      <td class="num">${fmtNum(c.drop8, 4)}</td>
+      <td class="op-cell">
+        <button class="btn-edit" data-edit-eq="${r.id}">编辑</button>
+        <button class="del" data-del-eq="${r.id}" title="删除">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('eqBody').innerHTML = rows ||
+    `<tr><td colspan="14" class="empty">暂无权益资产记录</td></tr>`;
+
+  const totalRate = sumInvested > 0 ? (sumProfit / sumInvested) * 100 : 0;
+  const sumCls = sumProfit >= 0 ? 'profit-up' : 'profit-down';
+  const sumProfitTxt = `${sumProfit >= 0 ? '+' : '−'}¥${fmt(Math.abs(sumProfit))}`;
+  const sumRateTxt   = `${totalRate >= 0 ? '+' : ''}${fmtNum(totalRate, 2)}%`;
+
+  document.getElementById('eqSum').innerHTML =
+    `<span>已投金额合计<b>¥${fmt(sumInvested)}</b></span>
+     <span>资产合计<b>¥${fmt(sumAsset)}</b></span>
+     <span>持有收益合计<b class="${sumCls}">${sumProfitTxt}</b></span>
+     <span>综合收益率<b class="${sumCls}">${sumRateTxt}</b></span>
+     <span>记录笔数<b>${list.length}</b></span>`;
+}
+
+/* 表单联动回显（只读字段） */
+function eqRefreshPreview(){
+  const rec = {
+    planAmount:     parseFloat(document.getElementById('eqPlanAmount').value)     || 0,
+    planShares:     parseFloat(document.getElementById('eqPlanShares').value)     || 0,
+    investedAmount: parseFloat(document.getElementById('eqInvestedAmount').value) || 0,
+    holdPrice:      parseFloat(document.getElementById('eqHoldPrice').value)      || 0,
+    holdShares:     parseFloat(document.getElementById('eqHoldShares').value)     || 0
+  };
+  const c = eqCalc(rec);
+  const setV = (id, v, d)=>{
+    const el = document.getElementById(id);
+    el.value = (v && isFinite(v)) ? Number(v).toFixed(d) : '';
+  };
+  setV('eqInvestPrice',    c.investPrice,    4);
+  setV('eqInvestedShares', c.investedShares, 2);
+  setV('eqAssetValue',     c.assetValue,     2);
+  setV('eqProfit',         c.profit,         2);
+  setV('eqProfitRate',     c.profitRate,     2);
+  setV('eqDrop6',          c.drop6,          4);
+  setV('eqDrop8',          c.drop8,          4);
+}
+
+['eqPlanAmount','eqPlanShares','eqInvestedAmount','eqHoldPrice','eqHoldShares'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', eqRefreshPreview);
+});
+
+function eqResetForm(){
+  eqEditId = null;
+  ['eqName','eqPlanAmount','eqPlanShares','eqInvestPrice','eqInvestedAmount','eqInvestedShares',
+   'eqHoldPrice','eqHoldShares','eqAssetValue','eqProfit','eqProfitRate','eqDrop6','eqDrop8']
+    .forEach(id=>{ document.getElementById(id).value = ''; });
+  document.getElementById('eqAdd').textContent = '添加资产';
+  document.getElementById('eqCancel').style.display = 'none';
+  document.getElementById('eqEditHint').style.display = 'none';
+}
+
+/* 读取并校验表单，返回 null 表示校验未通过 */
+function readEqForm(){
+  const name = document.getElementById('eqName').value.trim();
+  if(!name){ toast('请输入投资名称'); document.getElementById('eqName').focus(); return null; }
+
+  const num = id => {
+    const v = parseFloat(document.getElementById(id).value);
+    return isNaN(v) ? 0 : v;
+  };
+
+  return {
+    name,
+    planAmount:     num('eqPlanAmount'),
+    planShares:     num('eqPlanShares'),
+    investedAmount: num('eqInvestedAmount'),
+    holdPrice:      num('eqHoldPrice'),
+    holdShares:     num('eqHoldShares')
+  };
+}
+
+/* 添加 / 保存修改 */
+document.getElementById('eqAdd').addEventListener('click', ()=>{
+  const v = readEqForm();
+  if(!v) return;
+
+  if(eqEditId != null){
+    const rec = db.equity.find(x => x.id === eqEditId);
+    if(!rec){ eqResetForm(); renderEquity(); toast('该记录已不存在'); return; }
+    Object.assign(rec, v);
+    saveModule('equity').catch(()=>{});
+    eqResetForm();
+    renderEquity();
+    toast('已保存修改');
+  }else{
+    db.equity.push({ id: Date.now(), ...v });
+    saveModule('equity').catch(()=>{});
+    renderEquity();
+    eqResetForm();
+    document.getElementById('eqName').focus();
+    toast('已添加');
+  }
+});
+
+/* 取消编辑 */
+document.getElementById('eqCancel').addEventListener('click', ()=>{
+  eqResetForm();
+  renderEquity();
+  toast('已取消编辑');
+});
+
+/* 表格内：编辑 / 删除 */
+document.getElementById('eqBody').addEventListener('click', e=>{
+  const editBtn = e.target.closest('button[data-edit-eq]');
+  if(editBtn){
+    const id = Number(editBtn.dataset.editEq);
+    const r  = db.equity.find(x => x.id === id);
+    if(!r){ toast('记录不存在'); return; }
+
+    eqEditId = id;
+    document.getElementById('eqName').value           = r.name || '';
+    document.getElementById('eqPlanAmount').value     = Number(r.planAmount)     || '';
+    document.getElementById('eqPlanShares').value     = Number(r.planShares)     || '';
+    document.getElementById('eqInvestedAmount').value = Number(r.investedAmount) || '';
+    document.getElementById('eqHoldPrice').value      = Number(r.holdPrice)      || '';
+    document.getElementById('eqHoldShares').value     = Number(r.holdShares)     || '';
+    eqRefreshPreview();
+
+    document.getElementById('eqAdd').textContent = '保存修改';
+    document.getElementById('eqCancel').style.display = '';
+    document.getElementById('eqEditHint').style.display = '';
+    renderEquity();
+    return;
+  }
+
+  const delBtn = e.target.closest('button[data-del-eq]');
+  if(!delBtn) return;
+  const id = Number(delBtn.dataset.delEq);
+  const r  = db.equity.find(x => x.id === id);
+  if(!r) return;
+
+  if(!confirm(`确定删除「${r.name || ''}」这条权益资产记录吗？`)) return;
+
+  db.equity = db.equity.filter(x => x.id !== id);
+  if(eqEditId === id) eqResetForm();
+  saveModule('equity').catch(()=>{});
+  renderEquity();
+  toast('已删除');
+});
+
 /* ==================== 资产管理 ==================== */
 function ensureAssetMonth(m){
   if(!db.assets[m]) db.assets[m] = {};
@@ -1534,6 +1797,7 @@ function buildExportData(){
     expenses: db.expenses,
     assets: db.assets,
     deposits: db.deposits,
+    equity: db.equity,
     dca: db.dca
   };
 }
@@ -1562,11 +1826,13 @@ function renderDataMgmt(){
 
   const dcaCount = db.dca.length;
   const depCount = (db.deposits || []).length;
+  const eqCount  = (db.equity   || []).length;
 
   document.getElementById('dataOverview').innerHTML = `
     <div class="ov-item"><div class="k">支出记录</div><div class="v">${expMonths}<small>个月</small></div></div>
     <div class="ov-item"><div class="k">资产台账</div><div class="v">${assetMonths}<small>个月</small></div></div>
     <div class="ov-item"><div class="k">定期存款</div><div class="v">${depCount}<small>笔</small></div></div>
+    <div class="ov-item"><div class="k">权益资产</div><div class="v">${eqCount}<small>笔</small></div></div>
     <div class="ov-item"><div class="k">定投记录</div><div class="v">${dcaCount}<small>笔</small></div></div>
   `;
 
@@ -1610,7 +1876,7 @@ function doDownloadExport(){
 }
 
 function mergeImport(data){
-  const stats = { expMerged:0, assetMerged:0, dcaAdded:0, dcaSkipped:0, depAdded:0, depSkipped:0 };
+  const stats = { expMerged:0, assetMerged:0, dcaAdded:0, dcaSkipped:0, depAdded:0, depSkipped:0, eqAdded:0, eqSkipped:0 };
 
   if(data.expenses && typeof data.expenses === 'object'){
     Object.keys(data.expenses).forEach(m=>{
@@ -1692,6 +1958,28 @@ function mergeImport(data){
     });
   }
 
+  if(Array.isArray(data.equity)){
+    if(!Array.isArray(db.equity)) db.equity = [];
+    const ids = new Set(db.equity.map(r => r.id));
+    data.equity.forEach(r=>{
+      if(!r || typeof r !== 'object') return;
+      let id = Number(r.id);
+      if(!id) id = Date.now() + Math.floor(Math.random()*1000);
+      if(ids.has(id)){ stats.eqSkipped++; return; }
+      db.equity.push({
+        id,
+        name:           String(r.name || ''),
+        planAmount:     Number(r.planAmount)     || 0,
+        planShares:     Number(r.planShares)     || 0,
+        investedAmount: Number(r.investedAmount) || 0,
+        holdPrice:      Number(r.holdPrice)      || 0,
+        holdShares:     Number(r.holdShares)     || 0
+      });
+      ids.add(id);
+      stats.eqAdded++;
+    });
+  }
+
   if(Array.isArray(data.dca)){
     const ids = new Set(db.dca.map(r => r.id));
     data.dca.forEach(r=>{
@@ -1726,8 +2014,8 @@ async function doMergeImport(){
   if(!data || typeof data !== 'object' || Array.isArray(data)){
     toast('数据格式无效，需要导出的对象格式'); return;
   }
-  if(!data.expenses && !data.assets && !data.dca && !data.deposits){
-    toast('未找到可导入的字段（expenses / assets / deposits / dca）'); return;
+  if(!data.expenses && !data.assets && !data.dca && !data.deposits && !data.equity){
+    toast('未找到可导入的字段（expenses / assets / deposits / equity / dca）'); return;
   }
 
   if(!confirm('确定将以上数据合并到云端吗？云端已有数据不会被删除。')) return;
@@ -1738,11 +2026,12 @@ async function doMergeImport(){
     editingMonths.clear();
     dcaResetForm();            /* 导入后退出定投编辑态，避免 id 错乱 */
     depResetForm();            /* 同样退出定期存款编辑态 */
+    eqResetForm();             /* 同样退出权益资产编辑态 */
     refreshAllViews();
     document.getElementById('importText').value = '';
-    let msg = `导入完成：支出 ${s.expMerged} 项 · 资产 ${s.assetMerged} 项 · 定期存款 ${s.depAdded} 笔 · 定投 ${s.dcaAdded} 笔`;
-    if(s.depSkipped || s.dcaSkipped){
-      msg += `（跳过重复：定期 ${s.depSkipped} 笔 · 定投 ${s.dcaSkipped} 笔）`;
+    let msg = `导入完成：支出 ${s.expMerged} 项 · 资产 ${s.assetMerged} 项 · 定期存款 ${s.depAdded} 笔 · 权益资产 ${s.eqAdded} 笔 · 定投 ${s.dcaAdded} 笔`;
+    if(s.depSkipped || s.dcaSkipped || s.eqSkipped){
+      msg += `（跳过重复：定期 ${s.depSkipped} 笔 · 权益 ${s.eqSkipped} 笔 · 定投 ${s.dcaSkipped} 笔）`;
     }
     toast(msg);
   }catch(e){
@@ -1752,15 +2041,16 @@ async function doMergeImport(){
 
 function doClearAll(){
   if(!confirm('确定清空全部数据吗？此操作不可恢复。')) return;
-  if(!confirm('再次确认：真的要删除云端全部支出、资产、定期存款与定投记录吗？')) return;
+  if(!confirm('再次确认：真的要删除云端全部支出、资产、定期存款、权益资产与定投记录吗？')) return;
 
-  db = { expenses:{}, assets:{}, dca:[], deposits:[] };
+  db = { expenses:{}, assets:{}, dca:[], deposits:[], equity:[] };
   editingMonths.clear();
   state.expenseMonth = curMonth();
   document.getElementById('expenseMonth').value = state.expenseMonth;
   document.getElementById('assetNewMonth').value = curMonth();
   dcaResetForm();
   depResetForm();
+  eqResetForm();
   refreshAllViews();                               /* 本地立即生效 */
   saveAllModules()
     .then(()=>toast('已清空所有数据'))
@@ -1781,6 +2071,7 @@ function refreshAllViews(){
   renderExpense();
   renderExpenseSummary();
   renderDeposits();
+  renderEquity();
   renderAssets();
   renderDca();
   renderDataMgmt();
@@ -1806,10 +2097,12 @@ document.querySelectorAll('.tab').forEach(tab=>{
   document.getElementById('dcaDate').value = todayStr();
 
   dcaResetForm();
+  eqResetForm();
 
   renderExpense();
   renderExpenseSummary();
   renderDeposits();
+  renderEquity();
   renderAssets();
   renderDca();
   renderDataMgmt();
