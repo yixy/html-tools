@@ -176,6 +176,24 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 td.num.profit-up, .dca-sum b.profit-up{color:#199c5b}
 td.num.profit-down, .dca-sum b.profit-down{color:#d94a4a}
 
+/* 权益资产表格：冻结首列（投资名称） */
+.eq-table thead th:first-child{
+  position:sticky;
+  left:0;
+  z-index:3;
+  background:#f7f9fc;
+  box-shadow:2px 0 4px -2px rgba(16,24,40,.08);
+}
+.eq-table tbody td:first-child{
+  position:sticky;
+  left:0;
+  z-index:2;
+  background:#fff;
+  box-shadow:2px 0 4px -2px rgba(16,24,40,.08);
+}
+.eq-table tbody tr:hover td:first-child{ background:#fafcff; }
+#eqBody tr.editing td:first-child{ background:#eef4ff; }
+
 /* ---------- 数据管理 ---------- */
 .overview{display:flex;gap:10px;flex-wrap:wrap}
 .ov-item{flex:1 1 120px;background:#f7f9fc;border-radius:10px;padding:12px 14px}
@@ -468,7 +486,7 @@ body.logged-out .app{display:none}
       </div>
       <div class="mobile-only">左右滑动表格查看更多 →</div>
       <div class="scroll-x">
-        <table style="min-width:1440px">
+        <table class="eq-table" style="min-width:1440px">
           <thead>
             <tr>
               <th>投资名称</th>
