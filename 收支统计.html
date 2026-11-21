@@ -439,7 +439,8 @@ body.logged-out .app{display:none}
         <div class="card-title">定期存款维护 <small>到期利息 = 本金 × 年利率 × 期限</small></div>
       </div>
       <div class="dca-form">
-        <input type="date" id="depDue" title="到期日" aria-label="到期日">
+        <input type="text"   id="depBank" placeholder="银行" maxlength="40">
+        <input type="date"   id="depDue" title="到期日" aria-label="到期日">
         <input type="number" id="depRate" step="0.0001" min="0" placeholder="年利率 %">
         <input type="number" id="depYears" step="0.01" min="0" placeholder="期限（年）">
         <input type="number" id="depPrincipal" step="0.01" min="0" placeholder="本金">
@@ -451,9 +452,10 @@ body.logged-out .app{display:none}
       </div>
       <div class="mobile-only">左右滑动表格查看更多 →</div>
       <div class="scroll-x">
-        <table style="min-width:660px">
+        <table style="min-width:760px">
           <thead>
             <tr>
+              <th>银行</th>
               <th>到期日</th>
               <th>年利率</th>
               <th>期限（年）</th>
@@ -1211,6 +1213,7 @@ function renderDeposits(){
 
     const editing = depEditId === r.id;
     return `<tr data-dep-id="${r.id}"${editing ? ' class="editing"' : ''}>
+      <td>${esc(r.bank || '—')}</td>
       <td class="month-cell">${esc(r.dueDate || '—')}</td>
       <td>${fmtNum(rate, 4)}%</td>
       <td>${fmtNum(years, 2)}</td>
@@ -1224,7 +1227,7 @@ function renderDeposits(){
   }).join('');
 
   document.getElementById('depBody').innerHTML = rows ||
-    `<tr><td colspan="6" class="empty">暂无定期存款记录</td></tr>`;
+    `<tr><td colspan="7" class="empty">暂无定期存款记录</td></tr>`;
 
   const monthRate = sumPrincipal > 0 ? (sumMonthInt / sumPrincipal) : 0;
 
@@ -1238,6 +1241,7 @@ function renderDeposits(){
 
 function depResetForm(){
   depEditId = null;
+  document.getElementById('depBank').value = '';
   document.getElementById('depDue').value = '';
   document.getElementById('depRate').value = '';
   document.getElementById('depYears').value = '';
@@ -1248,6 +1252,7 @@ function depResetForm(){
 }
 
 function readDepForm(){
+  const bank      = document.getElementById('depBank').value.trim();
   const dueDate   = document.getElementById('depDue').value;
   const rate      = parseFloat(document.getElementById('depRate').value);
   const years     = parseFloat(document.getElementById('depYears').value);
@@ -1258,7 +1263,7 @@ function readDepForm(){
   if(isNaN(years) || years <= 0){ toast('请输入有效期限'); return null; }
   if(isNaN(principal) || principal <= 0){ toast('请输入有效本金'); return null; }
 
-  return { dueDate, rate, years, principal };
+  return { bank, dueDate, rate, years, principal };
 }
 
 /* 添加 / 保存修改 */
@@ -1302,6 +1307,7 @@ document.getElementById('depBody').addEventListener('click', e=>{
     if(!r){ toast('记录不存在'); return; }
 
     depEditId = id;
+    document.getElementById('depBank').value      = r.bank || '';
     document.getElementById('depDue').value       = r.dueDate || '';
     document.getElementById('depRate').value      = r.rate;
     document.getElementById('depYears').value     = r.years;
@@ -1320,7 +1326,8 @@ document.getElementById('depBody').addEventListener('click', e=>{
   const r  = db.deposits.find(x => x.id === id);
   if(!r) return;
 
-  if(!confirm(`确定删除 ${r.dueDate || ''} 到期的这笔定期存款记录吗？`)) return;
+  const label = [r.bank, r.dueDate].filter(Boolean).join(' ');
+  if(!confirm(`确定删除 ${label} 到期的这笔定期存款记录吗？`)) return;
 
   db.deposits = db.deposits.filter(x => x.id !== id);
   if(depEditId === id) depResetForm();
@@ -2046,6 +2053,7 @@ function mergeImport(data){
       if(ids.has(id)){ stats.depSkipped++; return; }
       db.deposits.push({
         id,
+        bank:      String(r.bank || ''),
         dueDate:   r.dueDate || '',
         rate:      Number(r.rate)      || 0,
         years:     Number(r.years)     || 0,
