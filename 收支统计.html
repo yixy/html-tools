@@ -142,6 +142,14 @@ td.rate-cell.text-cell{color:#7b8794;font-size:12.5px;padding:9px 10px}
 .op-cell{padding:8px 10px}
 .op-cell button + button{margin-left:6px}
 
+/* 上移 / 下移 */
+.btn-move{
+  border:1px solid #dde5f0;background:#eef2f9;color:#55617a;
+  padding:5px 8px;border-radius:7px;font-size:13px;line-height:1;transition:.15s;
+}
+.btn-move:hover:not(:disabled){background:#e1e8f3;color:#3b6ef6;border-color:#c7d7fb}
+.btn-move:disabled{opacity:.3;cursor:not-allowed}
+
 /* ---------- 定投 / 定期存款 ---------- */
 .dca-form{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
 .dca-form>*{flex:1 1 110px;min-width:100px}
@@ -320,6 +328,7 @@ body.logged-out .app{display:none}
 
   /* 资产操作按钮放大 */
   .btn-edit,.btn-save,.btn-cancel{padding:9px 14px;font-size:13.5px}
+  .btn-move{padding:9px 10px;font-size:13.5px}
 
   /* 定投 / 定期存款 */
   .dca-form>*{flex:1 1 100%;min-width:0}
@@ -486,7 +495,7 @@ body.logged-out .app{display:none}
       </div>
       <div class="mobile-only">左右滑动表格查看更多 →</div>
       <div class="scroll-x">
-        <table class="eq-table" style="min-width:1440px">
+        <table class="eq-table" style="min-width:1520px">
           <thead>
             <tr>
               <th>投资名称</th>
@@ -1347,14 +1356,67 @@ function eqCalc(rec){
   return { investPrice, investedShares, holdShares, assetValue, profit, profitRate, drop6, drop8 };
 }
 
+/* ===== 权益资产展示顺序 =====
+   记录上的 ord 字段（0 起，越小越靠上）决定上下顺序；
+   旧数据（无 ord）首次加载时按 id 倒序初始化，保持「新增在上」的原有观感 */
+function eqHasOrd(r){ return typeof r.ord === 'number' && isFinite(r.ord); }
+
+function eqNormalizeOrder(){
+  if(!Array.isArray(db.equity)) db.equity = [];
+  if(!db.equity.length) return false;
+
+  let changed = false;
+
+  /* 完全没有顺序字段：按 id 倒序初始化 */
+  if(!db.equity.some(eqHasOrd)){
+    db.equity.sort((a,b)=>(Number(b.id)||0)-(Number(a.id)||0));
+    changed = true;
+  }
+
+  /* 补齐缺失的 ord（如新导入 / 新增的记录）：按 id 倒序追加到末尾 */
+  let maxOrd = -1;
+  db.equity.forEach(r=>{ if(eqHasOrd(r)) maxOrd = Math.max(maxOrd, r.ord); });
+  db.equity.filter(r=>!eqHasOrd(r))
+    .sort((a,b)=>(Number(b.id)||0)-(Number(a.id)||0))
+    .forEach(r=>{ r.ord = ++maxOrd; changed = true; });
+
+  /* 按 ord 排序并压缩为连续序号 */
+  db.equity.sort((a,b)=>(a.ord||0)-(b.ord||0) || (Number(b.id)||0)-(Number(a.id)||0));
+  db.equity.forEach((r,i)=>{
+    if(r.ord !== i){ r.ord = i; changed = true; }
+  });
+
+  return changed;
+}
+
+/* 上移 / 下移一条记录 */
+function eqMoveRecord(id, dir){
+  eqNormalizeOrder();
+  const i = db.equity.findIndex(r=>r.id === id);
+  if(i < 0) return;
+  const j = i + dir;
+  if(j < 0 || j >= db.equity.length) return;
+
+  const tmp = db.equity[i];
+  db.equity[i] = db.equity[j];
+  db.equity[j] = tmp;
+  db.equity.forEach((r,k)=>{ r.ord = k; });
+
+  saveModule('equity').catch(()=>{});
+  renderEquity();
+}
+
 function renderEquity(){
   if(!Array.isArray(db.equity)) db.equity = [];
+  if(eqNormalizeOrder()){
+    /* 顺序字段刚初始化：同步到云端，避免下次加载重复计算 */
+    saveModule('equity').catch(()=>{});
+  }
 
-  const list = [...db.equity].sort((a, b)=>(b.id || 0) - (a.id || 0));
-
+  const list = db.equity;
   let sumInvested = 0, sumAsset = 0, sumProfit = 0;
 
-  const rows = list.map(r=>{
+  const rows = list.map((r, idx)=>{
     const c = eqCalc(r);
     sumInvested += Number(r.investedAmount) || 0;
     sumAsset    += c.assetValue;
@@ -1380,6 +1442,8 @@ function renderEquity(){
       <td class="num">${fmtNum(c.drop6, 4)}</td>
       <td class="num">${fmtNum(c.drop8, 4)}</td>
       <td class="op-cell">
+        <button class="btn-move" data-move-eq="${r.id}" data-dir="-1" title="上移"${idx === 0 ? ' disabled' : ''}>↑</button>
+        <button class="btn-move" data-move-eq="${r.id}" data-dir="1" title="下移"${idx === list.length - 1 ? ' disabled' : ''}>↓</button>
         <button class="btn-edit" data-edit-eq="${r.id}">编辑</button>
         <button class="del" data-del-eq="${r.id}" title="删除">✕</button>
       </td>
@@ -1474,7 +1538,8 @@ document.getElementById('eqAdd').addEventListener('click', ()=>{
     renderEquity();
     toast('已保存修改');
   }else{
-    db.equity.push({ id: Date.now(), ...v });
+    db.equity.unshift({ id: Date.now(), ...v });   /* 新记录置顶 */
+    db.equity.forEach((r,k)=>{ r.ord = k; });
     saveModule('equity').catch(()=>{});
     renderEquity();
     eqResetForm();
@@ -1490,8 +1555,17 @@ document.getElementById('eqCancel').addEventListener('click', ()=>{
   toast('已取消编辑');
 });
 
-/* 表格内：编辑 / 删除 */
+/* 表格内：上移 / 下移 / 编辑 / 删除 */
 document.getElementById('eqBody').addEventListener('click', e=>{
+  /* ---------- 上移 / 下移 ---------- */
+  const moveBtn = e.target.closest('button[data-move-eq]');
+  if(moveBtn){
+    if(!moveBtn.disabled){
+      eqMoveRecord(Number(moveBtn.dataset.moveEq), Number(moveBtn.dataset.dir));
+    }
+    return;
+  }
+
   const editBtn = e.target.closest('button[data-edit-eq]');
   if(editBtn){
     const id = Number(editBtn.dataset.editEq);
@@ -1523,6 +1597,7 @@ document.getElementById('eqBody').addEventListener('click', e=>{
   if(!confirm(`确定删除「${r.name || ''}」这条权益资产记录吗？`)) return;
 
   db.equity = db.equity.filter(x => x.id !== id);
+  db.equity.forEach((x,k)=>{ x.ord = k; });
   if(eqEditId === id) eqResetForm();
   saveModule('equity').catch(()=>{});
   renderEquity();
