@@ -473,7 +473,7 @@ body.logged-out .app{display:none}
     <!-- 权益资产维护 -->
     <div class="card">
       <div class="card-head">
-        <div class="card-title">权益资产维护 <small>投入单价 / 已投份数 / 持仓份额 / 持有收益 / 持有收益率 / 跌6%·跌8%净值 自动计算，资产（元）手工录入</small></div>
+        <div class="card-title">权益资产维护 <small>投入单价 / 已投份数 / 持仓份额 / 持有收益 / 持有收益率 / 跌6%·跌8%净值 / 涨50%净值 自动计算，资产（元）手工录入</small></div>
       </div>
       <div class="eq-form">
         <input type="text"   id="eqName"           placeholder="投资名称">
@@ -489,6 +489,7 @@ body.logged-out .app{display:none}
         <input type="number" id="eqProfitRate"     class="ro" placeholder="持有收益率（自动）" readonly>
         <input type="number" id="eqDrop6"          class="ro" placeholder="跌6%净值（自动）"   readonly>
         <input type="number" id="eqDrop8"          class="ro" placeholder="跌8%净值（自动）"   readonly>
+        <input type="number" id="eqRise50"         class="ro" placeholder="涨50%净值（自动）"  readonly>
         <button class="btn btn-primary" id="eqAdd">添加资产</button>
         <button class="btn" id="eqCancel" style="display:none">取消编辑</button>
       </div>
@@ -497,7 +498,7 @@ body.logged-out .app{display:none}
       </div>
       <div class="mobile-only">左右滑动表格查看更多 →</div>
       <div class="scroll-x">
-        <table class="eq-table" style="min-width:1520px">
+        <table class="eq-table" style="min-width:1620px">
           <thead>
             <tr>
               <th>投资名称</th>
@@ -513,6 +514,7 @@ body.logged-out .app{display:none}
               <th>持有收益率</th>
               <th>跌6%净值</th>
               <th>跌8%净值</th>
+              <th>涨50%净值</th>
               <th>操作</th>
             </tr>
           </thead>
@@ -1344,7 +1346,8 @@ let eqEditId = null;
    手工输入：planAmount, planShares, investedAmount, holdPrice, assetValue
    自动计算：investPrice（计划投入金额/计划投入份数）、investedShares（已投金额/投入单价）、
              holdShares（已投金额/持仓单价）、profit（资产-已投金额）、
-             profitRate（持有收益/已投金额×100）、drop6/drop8（持仓单价×0.94 / ×0.92） */
+             profitRate（持有收益/已投金额×100）、drop6/drop8（持仓单价×0.94 / ×0.92）、
+             rise50（持仓单价×1.5） */
 function eqCalc(rec){
   const planAmount     = Number(rec.planAmount)     || 0;
   const planShares     = Number(rec.planShares)     || 0;
@@ -1359,8 +1362,9 @@ function eqCalc(rec){
   const profitRate     = investedAmount > 0 ? (profit / investedAmount) * 100 : 0; // 持有收益率 %
   const drop6          = holdPrice * 0.94;                                     // 跌6%净值
   const drop8          = holdPrice * 0.92;                                     // 跌8%净值
+  const rise50         = holdPrice * 1.5;                                      // 涨50%净值
 
-  return { investPrice, investedShares, holdShares, assetValue, profit, profitRate, drop6, drop8 };
+  return { investPrice, investedShares, holdShares, assetValue, profit, profitRate, drop6, drop8, rise50 };
 }
 
 /* ===== 权益资产展示顺序 =====
@@ -1448,6 +1452,7 @@ function renderEquity(){
       <td class="num ${cls}">${rateTxt}</td>
       <td class="num">${fmtNum(c.drop6, 4)}</td>
       <td class="num">${fmtNum(c.drop8, 4)}</td>
+      <td class="num">${fmtNum(c.rise50, 4)}</td>
       <td class="op-cell">
         <button class="btn-move" data-move-eq="${r.id}" data-dir="-1" title="上移"${idx === 0 ? ' disabled' : ''}>↑</button>
         <button class="btn-move" data-move-eq="${r.id}" data-dir="1" title="下移"${idx === list.length - 1 ? ' disabled' : ''}>↓</button>
@@ -1458,7 +1463,7 @@ function renderEquity(){
   }).join('');
 
   document.getElementById('eqBody').innerHTML = rows ||
-    `<tr><td colspan="14" class="empty">暂无权益资产记录</td></tr>`;
+    `<tr><td colspan="15" class="empty">暂无权益资产记录</td></tr>`;
 
   const totalRate = sumInvested > 0 ? (sumProfit / sumInvested) * 100 : 0;
   const sumCls = sumProfit >= 0 ? 'profit-up' : 'profit-down';
@@ -1494,6 +1499,7 @@ function eqRefreshPreview(){
   setV('eqProfitRate',     c.profitRate,     2);
   setV('eqDrop6',          c.drop6,          4);
   setV('eqDrop8',          c.drop8,          4);
+  setV('eqRise50',         c.rise50,         4);
 }
 
 /* 只有手工输入字段才触发联动；eqAssetValue 是手工字段，也加入监听 */
@@ -1504,7 +1510,7 @@ function eqRefreshPreview(){
 function eqResetForm(){
   eqEditId = null;
   ['eqName','eqPlanAmount','eqPlanShares','eqInvestPrice','eqInvestedAmount','eqInvestedShares',
-   'eqHoldPrice','eqHoldShares','eqAssetValue','eqProfit','eqProfitRate','eqDrop6','eqDrop8']
+   'eqHoldPrice','eqHoldShares','eqAssetValue','eqProfit','eqProfitRate','eqDrop6','eqDrop8','eqRise50']
     .forEach(id=>{ document.getElementById(id).value = ''; });
   document.getElementById('eqAdd').textContent = '添加资产';
   document.getElementById('eqCancel').style.display = 'none';
